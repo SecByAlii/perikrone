@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Perikrone mark">
+  <defs>
+    <radialGradient id="planet" cx="38%" cy="34%" r="72%">
+      <stop offset="0%" stop-color="#9af1f7"/>
+      <stop offset="45%" stop-color="#48cfe6"/>
+      <stop offset="100%" stop-color="#1f8bab"/>
+    </radialGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f3d27a"/>
+      <stop offset="55%" stop-color="#e3b23c"/>
+      <stop offset="100%" stop-color="#b9882a"/>
+    </linearGradient>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="softglow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="3.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- orbit: the path; the dot marks its closest point (perikrone) -->
+  <ellipse cx="200" cy="205" rx="178" ry="66" transform="rotate(-18 200 205)"
+    fill="none" stroke="#38c6e0" stroke-opacity=".35" stroke-width="2" stroke-dasharray="3 7"/>
+
+  <!-- ring behind the planet -->
+  <ellipse cx="200" cy="200" rx="156" ry="52" transform="rotate(-18 200 200)"
+    fill="none" stroke="url(#ring)" stroke-width="12" stroke-opacity=".55"/>
+
+  <!-- the planet -->
+  <circle cx="200" cy="200" r="74" fill="url(#planet)"/>
+  <circle cx="200" cy="200" r="74" fill="none" stroke="#bff3f9" stroke-opacity=".35" stroke-width="1.5"/>
+
+  <!-- ring in front of the planet (dashed to show only the near arc) -->
+  <ellipse cx="200" cy="200" rx="156" ry="52" transform="rotate(-18 200 200)"
+    fill="none" stroke="url(#ring)" stroke-width="12" stroke-linecap="round"
+    stroke-dasharray="120 360" stroke-dashoffset="372"/>
+
+  <!-- closest-point marker: the bright 'perikrone' dot on the orbit -->
+  <circle cx="54" cy="250" r="12" fill="#eafcff" filter="url(#glow)"/>
+  <circle cx="54" cy="250" r="5.5" fill="#38c6e0" filter="url(#softglow)"/>
+</svg>

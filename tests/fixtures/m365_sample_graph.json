@@ -1,0 +1,64 @@
+{
+  "_comment": "Captured real-shape Microsoft Graph data (field names and structure match Graph v1.0). Used to test the M365 connector's normalize() without a live tenant.",
+  "organization_name": "Northwind Family Health (M365)",
+  "users": [
+    {
+      "id": "6b1e2f00-0001-4a10-9c01-aaaaaaaaaaaa",
+      "displayName": "Dr. Alan Northcott",
+      "userPrincipalName": "anorthcott@northwindfh.onmicrosoft.com",
+      "accountEnabled": true,
+      "userType": "Member",
+      "signInActivity": {"lastSignInDateTime": "2026-10-08T14:03:00Z"}
+    },
+    {
+      "id": "6b1e2f00-0002-4a10-9c01-bbbbbbbbbbbb",
+      "displayName": "Rosa Minkus (Office Manager)",
+      "userPrincipalName": "rminkus@northwindfh.onmicrosoft.com",
+      "accountEnabled": true,
+      "userType": "Member",
+      "signInActivity": {"lastSignInDateTime": "2026-10-09T09:20:00Z"}
+    },
+    {
+      "id": "6b1e2f00-0003-4a10-9c01-cccccccccccc",
+      "displayName": "Carl Industry (Front Desk)",
+      "userPrincipalName": "cindustry@northwindfh.onmicrosoft.com",
+      "accountEnabled": true,
+      "userType": "Member",
+      "signInActivity": {"lastSignInDateTime": "2026-10-07T16:45:00Z"}
+    },
+    {
+      "id": "6b1e2f00-0004-4a10-9c01-dddddddddddd",
+      "displayName": "Former Billing Temp",
+      "userPrincipalName": "billtemp@northwindfh.onmicrosoft.com",
+      "accountEnabled": true,
+      "userType": "Member",
+      "signInActivity": {"lastSignInDateTime": "2026-01-10T11:00:00Z"}
+    },
+    {
+      "id": "6b1e2f00-0005-4a10-9c01-eeeeeeeeeeee",
+      "displayName": "BrightBill Outsourcing",
+      "userPrincipalName": "ap_brightbill#EXT#@northwindfh.onmicrosoft.com",
+      "accountEnabled": true,
+      "userType": "Guest",
+      "signInActivity": {"lastSignInDateTime": "2026-09-20T08:00:00Z"}
+    },
+    {
+      "id": "6b1e2f00-0006-4a10-9c01-ffffffffffff",
+      "displayName": "Kip Thornbury (IT)",
+      "userPrincipalName": "kthornbury@northwindfh.onmicrosoft.com",
+      "accountEnabled": true,
+      "userType": "Member",
+      "signInActivity": {"lastSignInDateTime": "2026-10-06T10:30:00Z"}
+    }
+  ],
+  "mfa_registered_ids": [
+    "6b1e2f00-0002-4a10-9c01-bbbbbbbbbbbb",
+    "6b1e2f00-0006-4a10-9c01-ffffffffffff"
+  ],
+  "global_admin_ids": [
+    "6b1e2f00-0001-4a10-9c01-aaaaaaaaaaaa",
+    "6b1e2f00-0002-4a10-9c01-bbbbbbbbbbbb",
+    "6b1e2f00-0006-4a10-9c01-ffffffffffff"
+  ],
+  "security_defaults_enabled": false
+}

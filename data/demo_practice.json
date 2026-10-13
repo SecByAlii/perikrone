@@ -1,0 +1,99 @@
+{
+  "practice_name": "Cypress Eye Associates",
+  "source": "demo",
+  "collected_at": "2026-10-09T15:00:00Z",
+  "security_defaults_enabled": false,
+  "legacy_auth_allowed": true,
+  "users": [
+    {
+      "id": "u-001",
+      "display_name": "Dr. Marcus Reyes",
+      "email": "mreyes@cypresseye.example",
+      "enabled": true,
+      "mfa_enabled": false,
+      "is_admin": true,
+      "account_type": "member",
+      "last_sign_in": "2026-10-08T18:22:00Z"
+    },
+    {
+      "id": "u-002",
+      "display_name": "Dana Whitfield (Office Manager)",
+      "email": "dwhitfield@cypresseye.example",
+      "enabled": true,
+      "mfa_enabled": true,
+      "is_admin": true,
+      "account_type": "member",
+      "last_sign_in": "2026-10-09T13:05:00Z"
+    },
+    {
+      "id": "u-003",
+      "display_name": "Kevin Osei (IT contractor)",
+      "email": "kosei@cypresseye.example",
+      "enabled": true,
+      "mfa_enabled": true,
+      "is_admin": true,
+      "account_type": "member",
+      "last_sign_in": "2026-09-30T09:14:00Z"
+    },
+    {
+      "id": "u-004",
+      "display_name": "Priya Nair (Front Desk)",
+      "email": "pnair@cypresseye.example",
+      "enabled": true,
+      "mfa_enabled": false,
+      "is_admin": false,
+      "account_type": "member",
+      "last_sign_in": "2026-10-09T08:47:00Z"
+    },
+    {
+      "id": "u-005",
+      "display_name": "Tyler Brooks (Front Desk)",
+      "email": "tbrooks@cypresseye.example",
+      "enabled": true,
+      "mfa_enabled": false,
+      "is_admin": false,
+      "account_type": "member",
+      "last_sign_in": "2026-10-07T17:30:00Z"
+    },
+    {
+      "id": "u-006",
+      "display_name": "Sofia Ramirez (Billing)",
+      "email": "sramirez@cypresseye.example",
+      "enabled": true,
+      "mfa_enabled": true,
+      "is_admin": false,
+      "account_type": "member",
+      "last_sign_in": "2026-10-09T11:12:00Z"
+    },
+    {
+      "id": "u-007",
+      "display_name": "Former Receptionist",
+      "email": "frontdesk2@cypresseye.example",
+      "enabled": true,
+      "mfa_enabled": false,
+      "is_admin": false,
+      "account_type": "member",
+      "last_sign_in": "2026-02-01T16:40:00Z"
+    },
+    {
+      "id": "u-008",
+      "display_name": "Temp Scanner Account",
+      "email": "scanner@cypresseye.example",
+      "enabled": true,
+      "mfa_enabled": false,
+      "is_admin": false,
+      "account_type": "member",
+      "last_sign_in": null
+    },
+    {
+      "id": "u-009",
+      "display_name": "OutsourceBill LLC (billing vendor)",
+      "email": "ap@outsourcebill.example",
+      "enabled": true,
+      "mfa_enabled": false,
+      "is_admin": false,
+      "account_type": "guest",
+      "last_sign_in": "2026-09-15T10:00:00Z"
+    }
+  ]
+}

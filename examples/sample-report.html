@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Security Posture — Cypress Eye Associates</title>
+<style>
+:root{
+  --ink:#e9eff7; --muted:#9fb1c6; --line:rgba(255,255,255,.10);
+  --surface:rgba(255,255,255,.035); --surface2:rgba(255,255,255,.065);
+  --brand:#38c6e0; --brand2:#6ee7f0; --saturn:#e3b23c;
+  --crit:#ff6b6b; --high:#ff9f45; --med:#ffd43b; --low:#4dabf7;
+  --info:#8aa0b6; --good:#51cf66;
+}
+*{box-sizing:border-box}
+body{margin:0;color:var(--ink);
+  background:
+    radial-gradient(1100px 600px at 80% -10%, rgba(56,198,224,.14), transparent 60%),
+    radial-gradient(900px 500px at 0% 0%, rgba(227,178,60,.10), transparent 55%),
+    linear-gradient(180deg,#0b1120 0%, #080d18 100%);
+  background-attachment:fixed;min-height:100vh;
+  font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+.wrap{max-width:940px;margin:0 auto;padding:34px 20px 70px;}
+a{color:var(--brand2);text-decoration:none}
+.brandbar{display:flex;align-items:center;gap:10px;margin-bottom:22px}
+.brandbar .wordmark{font-size:15px;font-weight:700;letter-spacing:.22em;color:#fff}
+.brandbar .tag{color:var(--muted);font-size:12px;letter-spacing:.06em;
+  border-left:1px solid var(--line);padding-left:10px}
+.saturn{filter:drop-shadow(0 0 6px rgba(56,198,224,.5))}
+.head h1{font-size:30px;margin:.1em 0 .18em;letter-spacing:-.01em}
+.head .meta{color:var(--muted);font-size:13.5px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;
+  padding:26px;margin:22px 0;backdrop-filter:blur(6px)}
+.hero{display:flex;gap:30px;align-items:center;flex-wrap:wrap}
+.ring{flex:0 0 auto}
+.hero .verdict{flex:1 1 300px;min-width:260px}
+.hero .verdict h2{margin:.1em 0 .35em;font-size:21px}
+.hero .verdict p{margin:.3em 0;color:var(--muted)}
+.bottomline{margin-top:18px;border-radius:12px;padding:16px 18px;font-size:15px;
+  background:rgba(255,159,69,.08);border:1px solid rgba(255,159,69,.28);
+  border-left:4px solid var(--high);color:#ffd9b3}
+.bottomline.ok{background:rgba(81,207,102,.08);border-color:rgba(81,207,102,.3);
+  border-left-color:var(--good);color:#bdebc8}
+.bottomline b{color:#fff}
+.cards{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px}
+.scard{flex:1 1 110px;background:var(--surface2);border:1px solid var(--line);
+  border-radius:12px;padding:14px 12px;text-align:center}
+.scard .n{font-size:30px;font-weight:700;line-height:1}
+.scard .l{font-size:12px;color:var(--muted);margin-top:5px;text-transform:uppercase;letter-spacing:.05em}
+.scard.crit{border-top:3px solid var(--crit)} .scard.crit .n{color:var(--crit)}
+.scard.high{border-top:3px solid var(--high)} .scard.high .n{color:var(--high)}
+.scard.med{border-top:3px solid var(--med)}  .scard.med .n{color:var(--med)}
+.scard.low{border-top:3px solid var(--low)}  .scard.low .n{color:var(--low)}
+h3.section{font-size:13px;text-transform:uppercase;letter-spacing:.12em;color:var(--brand);
+  margin:38px 4px 10px}
+ol.plan{list-style:none;counter-reset:step;margin:0;padding:0}
+ol.plan li{counter-increment:step;display:flex;gap:13px;align-items:flex-start;
+  background:var(--surface);border:1px solid var(--line);border-radius:12px;
+  padding:13px 16px;margin:9px 0}
+ol.plan li::before{content:counter(step);flex:0 0 26px;height:26px;border-radius:50%;
+  background:var(--surface2);border:1px solid var(--line);color:var(--brand2);
+  font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
+ol.plan .txt{flex:1 1 auto}
+details.finding{background:var(--surface);border:1px solid var(--line);border-radius:13px;
+  margin:12px 0;overflow:hidden}
+details.finding[open]{border-color:rgba(56,198,224,.28)}
+summary{list-style:none;cursor:pointer;padding:16px 18px;display:flex;align-items:center;gap:14px}
+summary::-webkit-details-marker{display:none}
+.pill{flex:0 0 auto;font-size:11.5px;font-weight:700;color:#0b1120;border-radius:999px;
+  padding:4px 11px;white-space:nowrap}
+.pill.crit{background:var(--crit)} .pill.high{background:var(--high)}
+.pill.med{background:var(--med)} .pill.low{background:var(--low)}
+.pill.info{background:var(--info);color:#0b1120}
+summary .t{flex:1 1 auto;font-weight:600}
+summary .chev{flex:0 0 auto;color:var(--muted);transition:transform .15s}
+details[open] summary .chev{transform:rotate(90deg)}
+.body{padding:2px 18px 20px;border-top:1px solid var(--line)}
+.body .stakes{font-size:16px;margin:16px 0 8px}
+.body .why{color:var(--muted);margin:10px 0}
+.body h4{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--brand);
+  margin:20px 0 7px}
+.affected{margin:0;padding-left:18px} .affected li{margin:3px 0;color:var(--muted)}
+.fix{margin:0;padding-left:20px} .fix li{margin:6px 0}
+.links{display:flex;flex-wrap:wrap;gap:9px;margin-top:4px}
+.links a{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;
+  background:var(--surface2);border:1px solid rgba(56,198,224,.3);border-radius:9px;
+  padding:8px 13px;color:var(--brand2)}
+.links a:hover{border-color:var(--brand);background:rgba(56,198,224,.12)}
+.links a::before{content:"\2197";color:var(--brand)}
+.hipaa{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:9px;
+  padding:11px 14px;font-size:13px;color:var(--muted)}
+.hipaa code{color:var(--brand2)}
+.foot{color:var(--muted);font-size:12.5px;margin-top:34px;border-top:1px solid var(--line);
+  padding-top:16px}
+@media print{
+  body{background:#fff !important;color:#16222e}
+  .wrap{max-width:none}
+  .card,details.finding,ol.plan li{background:#fff;border-color:#dde3ea;backdrop-filter:none}
+  .scard{background:#f6f8fa}
+  .brandbar .wordmark{color:#0f6e8c}.saturn{filter:none}
+  h3.section,.body h4{color:#0f6e8c}
+  a,.hipaa code,.links a{color:#0b5267}
+  .muted,.head .meta,.affected li,.hero .verdict p{color:#5b6b7b}
+  .bottomline{background:#fff7f3;color:#5a3418;border-color:#f3d8c9}
+  details.finding{break-inside:avoid}summary{cursor:default}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brandbar">
+<svg class="saturn" width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
+  <defs><linearGradient id="pg" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#6ee7f0"/><stop offset="1" stop-color="#38c6e0"/>
+  </linearGradient></defs>
+  <ellipse cx="13" cy="13" rx="12" ry="4.2" fill="none" stroke="#e3b23c"
+    stroke-width="1.6" transform="rotate(-20 13 13)" opacity=".9"/>
+  <circle cx="13" cy="13" r="6.2" fill="url(#pg)"/>
+  <ellipse cx="13" cy="13" rx="12" ry="4.2" fill="none" stroke="#e3b23c"
+    stroke-width="1.6" transform="rotate(-20 13 13)"
+    stroke-dasharray="14 40" opacity=".9"/>
+</svg><span class="wordmark">PERIKRONE</span>
+    <span class="tag">closest-point security</span></div>
+  <div class="head">
+    <h1>Cypress Eye Associates</h1>
+    <div class="meta">Security posture assessment &middot; 2026-10-09T15:00:00Z
+      &middot; 9 accounts reviewed &middot; source: demo</div>
+  </div>
+  
+    <div class="card hero">
+      
+    <div class="ring">
+      <svg width="150" height="150" viewBox="0 0 150 150" role="img"
+           aria-label="Security score 27 of 100, grade F">
+        <circle cx="75" cy="75" r="56" fill="none" stroke="rgba(255,255,255,.08)"
+          stroke-width="12"/>
+        <circle cx="75" cy="75" r="56" fill="none" stroke="var(--crit)" stroke-width="12"
+          stroke-linecap="round" stroke-dasharray="351.9" stroke-dashoffset="256.9"
+          transform="rotate(-90 75 75)"
+          style="filter:drop-shadow(0 0 7px var(--crit))"/>
+        <text x="75" y="71" text-anchor="middle" font-size="38" font-weight="700"
+          fill="#fff">27</text>
+        <text x="75" y="95" text-anchor="middle" font-size="12.5"
+          fill="var(--muted)">of 100 &middot; grade F</text>
+      </svg>
+    </div>
+      <div class="verdict">
+        <h2>6 issues found — 1 needs attention right now.</h2>
+        <p>Here&#x27;s where this practice stands, worst first, in plain English — with the fix for each.</p>
+        <div class="cards"><div class="scard crit"><div class="n">1</div><div class="l">Fix now</div></div><div class="scard high"><div class="n">3</div><div class="l">Fix this week</div></div><div class="scard med"><div class="n">2</div><div class="l">Fix this month</div></div></div>
+      </div>
+    </div>
+    <div class="bottomline"><b>Bottom line:</b> this practice has 5 accounts that can be opened with just a password, 2 abandoned-looking accounts that still work, 1 outside account with standing access, basic protections switched off, and more administrator accounts than it should have. Each of these is a way patient information could leave without anyone noticing &mdash; and right now, nothing is watching for it.</div>
+    
+  <h3 class="section">Start here &mdash; your action plan</h3><ol class="plan"><li><span class="txt"><span class="pill crit">Fix now</span> Require MFA for every user, administrators first.</span></li><li><span class="txt"><span class="pill high">Fix this week</span> Confirm whether each account belongs to someone who still works here.</span></li><li><span class="txt"><span class="pill high">Fix this week</span> Keep two administrator accounts (one primary, one break-glass backup) and remove admin rights from everyone else.</span></li><li><span class="txt"><span class="pill high">Fix this week</span> Turn on security defaults (or, if you&#x27;ve outgrown them, replace them with equivalent conditional-access policies).</span></li><li><span class="txt"><span class="pill med">Fix this month</span> Block legacy authentication tenant-wide.</span></li><li><span class="txt"><span class="pill med">Fix this month</span> Review each guest: confirm who they are and whether they still need access.</span></li></ol>
+  <h3 class="section">What we found</h3>
+    <details class="finding" open>
+      <summary>
+        <span class="pill crit">Fix now</span>
+        <span class="t">Accounts without multi-factor authentication</span>
+        <span class="chev">&#9656;</span>
+      </summary>
+      <div class="body">
+        <p class="stakes"><b>5 active accounts have no MFA enabled.</b></p>
+        <p class="why">These accounts can be signed into with a password alone. A single phished, guessed, or reused password is all an attacker needs -- no second factor stands in the way. This is the single most common way small practices get breached, and multi-factor authentication would stop nearly all of it at the front door. Worse, 1 of these is an administrator account (Dr. Marcus Reyes &lt;mreyes@cypresseye.example&gt;), so compromising one hands an attacker control of the entire environment.</p>
+        <h4>Affected</h4><ul class='affected'><li>Dr. Marcus Reyes &lt;mreyes@cypresseye.example&gt;</li><li>Priya Nair (Front Desk) &lt;pnair@cypresseye.example&gt;</li><li>Tyler Brooks (Front Desk) &lt;tbrooks@cypresseye.example&gt;</li><li>Former Receptionist &lt;frontdesk2@cypresseye.example&gt;</li><li>Temp Scanner Account &lt;scanner@cypresseye.example&gt;</li></ul>
+        <h4>How to fix it</h4><ol class='fix'><li>Require MFA for every user, administrators first.</li><li>Prefer an authenticator app or hardware key over SMS codes.</li><li>Enforce it with a conditional-access policy (or security defaults) so new accounts get it automatically.</li></ol>
+        <h4>Step-by-step guides</h4><div class='links'><a href="https://learn.microsoft.com/en-us/microsoft-365/admin/security-and-compliance/set-up-multi-factor-authentication" target="_blank" rel="noopener">Microsoft 365: set up multi-factor authentication</a><a href="https://support.google.com/a/answer/175197" target="_blank" rel="noopener">Google Workspace: turn on 2-step verification</a></div>
+        <h4>Why it matters for compliance</h4><div class='hipaa'><code>45 CFR 164.312(d)</code> &mdash; Person or Entity Authentication<br><code>45 CFR 164.312(a)(1)</code> &mdash; Access Control</div>
+      </div>
+    </details>
+    <details class="finding" open>
+      <summary>
+        <span class="pill high">Fix this week</span>
+        <span class="t">Stale / orphaned active accounts</span>
+        <span class="chev">&#9656;</span>
+      </summary>
+      <div class="body">
+        <p class="stakes"><b>2 active accounts look abandoned but still enabled.</b></p>
+        <p class="why">Each of these accounts is still enabled but shows no recent use -- the classic signature of a staff member who left without their access being turned off. Every one is a standing door into the practice that nobody is watching: it can be taken over quietly, and because no one uses it, the misuse goes unnoticed for months.</p>
+        <h4>Affected</h4><ul class='affected'><li>Former Receptionist &lt;frontdesk2@cypresseye.example&gt; (last signed in 249 days ago)</li><li>Temp Scanner Account &lt;scanner@cypresseye.example&gt; (has never signed in)</li></ul>
+        <h4>How to fix it</h4><ol class='fix'><li>Confirm whether each account belongs to someone who still works here.</li><li>Disable (don&#x27;t delete) departed-staff accounts immediately, then remove them after any required retention period.</li><li>Put a written termination checklist in place so access is revoked the day someone leaves.</li></ol>
+        <h4>Step-by-step guides</h4><div class='links'><a href="https://learn.microsoft.com/en-us/microsoft-365/admin/add-users/remove-former-employee" target="_blank" rel="noopener">Microsoft 365: remove a former employee&#x27;s access</a></div>
+        <h4>Why it matters for compliance</h4><div class='hipaa'><code>45 CFR 164.308(a)(3)(ii)(C)</code> &mdash; Termination Procedures<br><code>45 CFR 164.308(a)(4)</code> &mdash; Information Access Management</div>
+      </div>
+    </details>
+    <details class="finding" open>
+      <summary>
+        <span class="pill high">Fix this week</span>
+        <span class="t">Too many administrator accounts</span>
+        <span class="chev">&#9656;</span>
+      </summary>
+      <div class="body">
+        <p class="stakes"><b>3 accounts have full administrator rights (recommended maximum for a practice this size is 2).</b></p>
+        <p class="why">Full administrator rights should be rare -- an admin account can change security settings, read anyone&#x27;s mail, and reset passwords. The more accounts hold that power, the bigger the target: an attacker only has to phish one of them to own everything. Day-to-day work almost never needs admin rights.</p>
+        <h4>Affected</h4><ul class='affected'><li>Dr. Marcus Reyes &lt;mreyes@cypresseye.example&gt;</li><li>Dana Whitfield (Office Manager) &lt;dwhitfield@cypresseye.example&gt;</li><li>Kevin Osei (IT contractor) &lt;kosei@cypresseye.example&gt;</li></ul>
+        <h4>How to fix it</h4><ol class='fix'><li>Keep two administrator accounts (one primary, one break-glass backup) and remove admin rights from everyone else.</li><li>Give staff only the specific permissions their job needs (least privilege).</li><li>Require admins to do everyday work from a normal, non-admin account.</li></ol>
+        <h4>Step-by-step guides</h4><div class='links'><a href="https://learn.microsoft.com/en-us/microsoft-365/admin/add-users/about-admin-roles" target="_blank" rel="noopener">Microsoft 365: about admin roles (least privilege)</a></div>
+        <h4>Why it matters for compliance</h4><div class='hipaa'><code>45 CFR 164.308(a)(4)(ii)(B)</code> &mdash; Access Authorization<br><code>45 CFR 164.312(a)(1)</code> &mdash; Access Control</div>
+      </div>
+    </details>
+    <details class="finding" open>
+      <summary>
+        <span class="pill high">Fix this week</span>
+        <span class="t">Baseline security protections are turned off</span>
+        <span class="chev">&#9656;</span>
+      </summary>
+      <div class="body">
+        <p class="stakes"><b>Security defaults (the free baseline protections) are disabled.</b></p>
+        <p class="why">The platform&#x27;s built-in baseline -- which enforces MFA, blocks the weakest legacy sign-in methods, and protects admin actions -- is switched off. With it off, the practice is relying on protections that have to be configured by hand, and the gaps found in this report are the predictable result.</p>
+        <h4>Affected</h4><ul class='affected'><li>Tenant-wide setting</li></ul>
+        <h4>How to fix it</h4><ol class='fix'><li>Turn on security defaults (or, if you&#x27;ve outgrown them, replace them with equivalent conditional-access policies).</li><li>Confirm MFA is enforced for all users afterward.</li></ol>
+        <h4>Step-by-step guides</h4><div class='links'><a href="https://learn.microsoft.com/en-us/entra/fundamentals/security-defaults" target="_blank" rel="noopener">Microsoft Entra: security defaults</a></div>
+        <h4>Why it matters for compliance</h4><div class='hipaa'><code>45 CFR 164.312(a)(1)</code> &mdash; Access Control<br><code>45 CFR 164.308(a)(1)(ii)(B)</code> &mdash; Risk Management</div>
+      </div>
+    </details>
+    <details class="finding">
+      <summary>
+        <span class="pill med">Fix this month</span>
+        <span class="t">Outdated sign-in methods are still allowed</span>
+        <span class="chev">&#9656;</span>
+      </summary>
+      <div class="body">
+        <p class="stakes"><b>Legacy authentication protocols are still permitted.</b></p>
+        <p class="why">Old sign-in methods (legacy authentication) can&#x27;t do multi-factor authentication, so attackers use them as a side door to bypass MFA entirely. They&#x27;re a favorite target of automated password-spray attacks and are almost never needed by a modern practice.</p>
+        <h4>Affected</h4><ul class='affected'><li>Tenant-wide setting</li></ul>
+        <h4>How to fix it</h4><ol class='fix'><li>Block legacy authentication tenant-wide.</li><li>Move any old device or app that depended on it to a modern, MFA-capable sign-in method first.</li></ol>
+        <h4>Step-by-step guides</h4><div class='links'><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/policy-block-legacy-authentication" target="_blank" rel="noopener">Microsoft Entra: block legacy authentication</a></div>
+        <h4>Why it matters for compliance</h4><div class='hipaa'><code>45 CFR 164.312(e)(1)</code> &mdash; Transmission Security<br><code>45 CFR 164.312(a)(1)</code> &mdash; Access Control</div>
+      </div>
+    </details>
+    <details class="finding">
+      <summary>
+        <span class="pill med">Fix this month</span>
+        <span class="t">External / guest accounts with standing access</span>
+        <span class="chev">&#9656;</span>
+      </summary>
+      <div class="body">
+        <p class="stakes"><b>1 external guest account has access to the environment.</b></p>
+        <p class="why">These accounts belong to people outside the practice -- a billing contractor, a former vendor, an outside consultant. Outside access is sometimes legitimate, but each account is a door you don&#x27;t fully control, and standing access that outlives its purpose is a common blind spot. If any of these people handle patient data, a signed business associate agreement is legally required.</p>
+        <h4>Affected</h4><ul class='affected'><li>OutsourceBill LLC (billing vendor) &lt;ap@outsourcebill.example&gt;</li></ul>
+        <h4>How to fix it</h4><ol class='fix'><li>Review each guest: confirm who they are and whether they still need access.</li><li>Remove access that is no longer needed.</li><li>Make sure a signed business associate agreement is on file for any outside party that touches patient data.</li></ol>
+        
+        <h4>Why it matters for compliance</h4><div class='hipaa'><code>45 CFR 164.308(b)(1)</code> &mdash; Business Associate Contracts and Other Arrangements<br><code>45 CFR 164.308(a)(4)</code> &mdash; Information Access Management</div>
+      </div>
+    </details>
+  <div class="foot">
+    Perikrone reads configuration only &mdash; it never changes anything or touches patient data.
+    This report supports, but does not replace, a full HIPAA Security Rule risk analysis
+    (45 CFR 164.308(a)(1)(ii)(A)). To save a copy: File &rarr; Print &rarr; Save as PDF.
+  </div>
+</div>
+<script>
+  // Open every finding before printing so nothing is hidden in the PDF.
+  window.addEventListener('beforeprint',function(){
+    document.querySelectorAll('details.finding').forEach(function(d){
+      d.dataset.wasOpen = d.open ? '1' : '0'; d.open = true;
+    });
+  });
+  window.addEventListener('afterprint',function(){
+    document.querySelectorAll('details.finding').forEach(function(d){
+      if(d.dataset.wasOpen === '0') d.open = false;
+    });
+  });
+</script>
+</body>
+</html>

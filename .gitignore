@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Generated reports (regenerated on every run)
+reports/
+
+# Real practice data captured by the manual connector — NEVER publish this.
+# The demo practice is the one exception, kept so the tool runs on clone.
+data/*.json
+!data/demo_practice.json
+
+# macOS
+.DS_Store
