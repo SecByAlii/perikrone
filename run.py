@@ -65,12 +65,31 @@ def main(argv: list[str] | None = None) -> int:
         "--port", type=int, default=8765,
         help="port for --serve (default: 8765)",
     )
+    parser.add_argument(
+        "--watch", action="store_true",
+        help="monitor: re-scan on a schedule and alert when posture degrades",
+    )
+    parser.add_argument(
+        "--interval", type=int, default=60,
+        help="seconds between scans in --watch mode (default: 60)",
+    )
+    parser.add_argument(
+        "--cycles", type=int, default=0,
+        help="stop --watch after N scans (default: 0 = run until Ctrl+C)",
+    )
+    parser.add_argument(
+        "--simulate-drift", dest="simulate_drift", action="store_true",
+        help="demo only: degrade the demo practice after the first scan so an alert fires",
+    )
     args = parser.parse_args(argv)
 
     if args.serve:
         from perikrone.server import serve
         serve(port=args.port)
         return 0
+
+    if args.watch:
+        return _watch(args)
 
     # ---- collect (connector-specific) --------------------------------------
     try:
@@ -111,6 +130,56 @@ def main(argv: list[str] | None = None) -> int:
     if args.auto_open and html_report:
         import subprocess
         subprocess.run(["open", str(html_report)], check=False)
+    return 0
+
+
+def _watch(args) -> int:
+    import time
+    from perikrone import monitor
+
+    interval = max(2, args.interval)
+    kwargs = {"data_path": args.data} if (args.source == "demo" and args.data) else {}
+    print(f"Perikrone monitoring — source: {args.source}, every {interval}s. "
+          "Ctrl+C to stop.")
+    prev = None
+    cycle = 0
+    try:
+        while True:
+            cycle += 1
+            try:
+                snapshot = get_connector(args.source, **kwargs).collect()
+            except (ValueError, FileNotFoundError) as exc:
+                print(f"  scan failed: {exc}", file=sys.stderr)
+                return 2
+            if args.simulate_drift and args.source == "demo" and cycle >= 2:
+                snapshot = monitor.apply_demo_drift(snapshot)
+            result = assess(snapshot)
+            history.record(result)
+            stamp = datetime.now().strftime("%H:%M:%S")
+            if prev is None:
+                print(f"[{stamp}] baseline — {result.practice_name}: "
+                      f"{result.score()}/100 ({result.grade()}), "
+                      f"{len(result.findings)} findings")
+            else:
+                alerts = monitor.diff_results(prev, result)
+                if monitor.is_degradation(alerts):
+                    print(f"[{stamp}] ⚠ ALERT — posture degraded:")
+                    for a in alerts:
+                        print(f"      - {a.message}")
+                    monitor.desktop_notify("Perikrone: posture dropped",
+                                           monitor.summary_line(alerts))
+                    monitor.log_alerts(result, alerts)
+                elif alerts:
+                    print(f"[{stamp}] change: " + "; ".join(a.message for a in alerts))
+                else:
+                    print(f"[{stamp}] no change — stable at "
+                          f"{result.score()}/100 ({result.grade()})")
+            prev = result
+            if args.cycles and cycle >= args.cycles:
+                break
+            time.sleep(interval)
+    except KeyboardInterrupt:
+        print("\nmonitoring stopped.")
     return 0
 
 

@@ -22,6 +22,7 @@ python3 run.py --serve           # launch the app: open in browser, scan from a 
 python3 run.py                   # or one-shot: assess the demo and write a report
 python3 run.py --open            # ...and open that report in your browser
 python3 run.py --source manual   # assess a REAL practice via guided questions
+python3 run.py --watch           # monitor: re-scan on a schedule, alert if posture drops
 ```
 
 `--serve` is the app: it opens Perikrone in your browser, you pick a source and
@@ -42,8 +43,22 @@ Perikrone — Cypress Eye Associates
 ```
 
 The dashboard leads with a posture **score**, a plain-English bottom-line verdict,
-a prioritized **action plan**, and each finding reframed as *when to fix it*
-("Fix now / this week / this month") with links to the official how-to guides.
+a prioritized **action plan**, each finding reframed as *when to fix it*
+("Fix now / this week / this month") with links to the official how-to guides,
+and — once there's history — a **posture-over-time** trend.
+
+## Monitoring (`--watch`)
+
+`python3 run.py --watch` re-scans on a schedule and **alerts only when posture
+degrades** — a new gap appears, an existing one gets worse, or the score drops.
+Alerts print to the console, fire a desktop notification (macOS), and append to
+`reports/alerts.log`. Leave it running, or schedule single scans with cron/launchd.
+
+```bash
+python3 run.py --watch --source m365 --interval 3600    # scan a live tenant hourly
+python3 run.py --watch --source demo --simulate-drift   # demo: watch an alert fire
+```
+
 
 ## What it checks (v1)
 
@@ -86,6 +101,8 @@ perikrone/
     manual.py            guided Q&A intake — the universal fallback
     m365.py              Microsoft 365 / Entra via Graph (read-only)
   server.py              the launch-and-run app (--serve)
+  history.py             saves each scan; powers the posture-over-time trend
+  monitor.py             change detection + alerts (--watch)
 data/demo_practice.json  the fake practice
 docs/m365-setup.md       how to connect a live Microsoft 365 tenant
 examples/                a rendered sample report
@@ -97,11 +114,11 @@ run.py                   CLI entry point
 ## Roadmap
 
 - **Now:** engine + the launch-and-run **dashboard app** (live scan, guided
-  "Fix it", and re-scan-to-watch-the-score-climb) + **demo**, **guided/manual**,
-  and **Microsoft 365 / Entra** (read-only Graph) connectors. ✅
+  "Fix it", re-scan-to-watch-the-score-climb) + **demo**, **guided/manual**, and
+  **Microsoft 365 / Entra** (read-only Graph) connectors + **posture-over-time
+  trend** + **monitoring & alerts** (`--watch`). ✅
   Connect a tenant: [docs/m365-setup.md](docs/m365-setup.md).
 - **Next:** **Google Workspace** (Admin SDK) — same engine, new plug.
-- **Later:** scan history + trend over time, then scheduled re-scans and alerts.
 - **Firm-level:** EHR/EMR connectors (Epic, eClinicalWorks, Athenahealth,
   NextGen, Tebra). Deferred on purpose — no universal EHR API, each vendor is a
   partner-gated integration, and reading the EHR means touching PHI. Gated on a
