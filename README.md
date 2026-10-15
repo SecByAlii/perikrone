@@ -119,11 +119,14 @@ perikrone/
     demo.py              reads the built-in sample practice
     manual.py            guided Q&A intake — the universal fallback
     m365.py              Microsoft 365 / Entra via Graph (read-only)
+    google_workspace.py  Google Workspace via Admin SDK (read-only)
+    _http.py             shared stdlib HTTP helpers for the API connectors
   server.py              the launch-and-run app (--serve)
   history.py             saves each scan; powers the posture-over-time trend
   monitor.py             change detection + alerts (--watch)
 data/demo_practice.json  the fake practice
 docs/m365-setup.md       how to connect a live Microsoft 365 tenant
+docs/google-setup.md     how to connect a live Google Workspace tenant
 examples/                a rendered sample report
 tests/                   connector tests (run: python3 -m unittest)
 reports/                 generated reports land here (git-ignored)
@@ -133,11 +136,10 @@ run.py                   CLI entry point
 ## Roadmap
 
 - **Now:** engine + the launch-and-run **dashboard app** (live scan, guided
-  "Fix it", re-scan-to-watch-the-score-climb) + **demo**, **guided/manual**, and
-  **Microsoft 365 / Entra** (read-only Graph) connectors + **posture-over-time
-  trend** + **monitoring & alerts** (`--watch`). ✅
-  Connect a tenant: [docs/m365-setup.md](docs/m365-setup.md).
-- **Next:** **Google Workspace** (Admin SDK) — same engine, new plug.
+  "Fix it", re-scan-to-watch-the-score-climb) + **demo**, **guided/manual**,
+  **Microsoft 365 / Entra**, and **Google Workspace** (both read-only) connectors
+  + **posture-over-time trend** + **monitoring & alerts** (`--watch`). ✅
+  Connect a tenant: [M365](docs/m365-setup.md) · [Google Workspace](docs/google-setup.md).
 - **Firm-level:** EHR/EMR connectors (Epic, eClinicalWorks, Athenahealth,
   NextGen, Tebra). Deferred on purpose — no universal EHR API, each vendor is a
   partner-gated integration, and reading the EHR means touching PHI. Gated on a

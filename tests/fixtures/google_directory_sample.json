@@ -1,0 +1,79 @@
+{
+  "_comment": "Captured real-shape Google Admin SDK Directory API user data (field names and structure match directory.users). Used to test the Google Workspace connector's normalize() without a live tenant.",
+  "organization_name": "baysidedental.example (Google Workspace)",
+  "users": [
+    {
+      "id": "100000000000000000001",
+      "primaryEmail": "dr.okafor@baysidedental.example",
+      "name": {"fullName": "Dr. Nadia Okafor"},
+      "suspended": false,
+      "isAdmin": true,
+      "isEnrolledIn2Sv": false,
+      "lastLoginTime": "2026-10-13T14:03:00.000Z"
+    },
+    {
+      "id": "100000000000000000002",
+      "primaryEmail": "r.delgado@baysidedental.example",
+      "name": {"fullName": "Rosa Delgado (Office Manager)"},
+      "suspended": false,
+      "isAdmin": true,
+      "isEnrolledIn2Sv": true,
+      "lastLoginTime": "2026-10-14T09:20:00.000Z"
+    },
+    {
+      "id": "100000000000000000003",
+      "primaryEmail": "it@baysidedental.example",
+      "name": {"fullName": "Marcus Lane (IT)"},
+      "suspended": false,
+      "isAdmin": true,
+      "isEnrolledIn2Sv": true,
+      "lastLoginTime": "2026-10-12T17:45:00.000Z"
+    },
+    {
+      "id": "100000000000000000004",
+      "primaryEmail": "frontdesk@baysidedental.example",
+      "name": {"fullName": "Tina Brooks (Front Desk)"},
+      "suspended": false,
+      "isAdmin": false,
+      "isEnrolledIn2Sv": false,
+      "lastLoginTime": "2026-10-13T08:10:00.000Z"
+    },
+    {
+      "id": "100000000000000000005",
+      "primaryEmail": "hygienist@baysidedental.example",
+      "name": {"fullName": "Paul Reyes (Hygienist)"},
+      "suspended": false,
+      "isAdmin": false,
+      "isEnrolledIn2Sv": false,
+      "lastLoginTime": "2026-01-05T11:00:00.000Z"
+    },
+    {
+      "id": "100000000000000000006",
+      "primaryEmail": "temp@baysidedental.example",
+      "name": {"fullName": "Summer Temp Account"},
+      "suspended": false,
+      "isAdmin": false,
+      "isEnrolledIn2Sv": false,
+      "lastLoginTime": "1970-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "100000000000000000007",
+      "primaryEmail": "former.biller@baysidedental.example",
+      "name": {"fullName": "Former Biller"},
+      "suspended": true,
+      "isAdmin": false,
+      "isEnrolledIn2Sv": false,
+      "lastLoginTime": "2026-02-01T10:00:00.000Z"
+    },
+    {
+      "id": "100000000000000000008",
+      "primaryEmail": "contractor@external-billing.example",
+      "name": {"fullName": "External Billing Contractor"},
+      "suspended": false,
+      "isAdmin": false,
+      "isEnrolledIn2Sv": true,
+      "isGuestUser": true,
+      "lastLoginTime": "2026-10-10T09:00:00.000Z"
+    }
+  ]
+}
