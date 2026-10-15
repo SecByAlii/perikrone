@@ -70,8 +70,12 @@ def _tri(value):
 def _store_guided(data):
     """Build and store a snapshot from the in-app guided form's JSON."""
     global _guided_snapshot
+    if not isinstance(data, dict):
+        raise ValueError("guided payload must be a JSON object")
     accounts = []
     for a in data.get("accounts", []):
+        if not isinstance(a, dict):
+            continue
         accounts.append({
             "name": a.get("name", ""),
             "email": a.get("email", ""),
@@ -100,7 +104,8 @@ _SHELL = """<!doctype html>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Perikrone</title>
 <style>
-  :root{--brand:#38c6e0;--brand2:#6ee7f0;--saturn:#e3b23c;--muted:#9fb1c6}
+  :root{--brand:#38c6e0;--brand2:#6ee7f0;--saturn:#e3b23c;--muted:#9fb1c6;
+    --surface:rgba(255,255,255,.035);--surface2:rgba(255,255,255,.065);--line:rgba(255,255,255,.10)}
   *{box-sizing:border-box} html,body{height:100%}
   body{margin:0;background:linear-gradient(180deg,#0b1120,#080d18);color:#e9eff7;
     font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -295,7 +300,8 @@ _SHELL = """<!doctype html>
         if(res.error){ el('g-err').textContent=res.error; return; }
         el('guided').style.display='none';
         runScan(false);
-      });
+      })
+      .catch(function(){ el('g-err').textContent='Could not reach the server — try again.'; });
   }
   function runScan(reset){
     if(reset === undefined){ reset = true; }  // the header button starts fresh
@@ -393,7 +399,7 @@ class _Handler(BaseHTTPRequestHandler):
             try:
                 _store_guided(json.loads(raw.decode("utf-8")))
                 self._send_json({"ok": True})
-            except (ValueError, TypeError) as exc:
+            except (ValueError, TypeError, AttributeError) as exc:
                 self._send_json({"error": str(exc)})
         else:
             self.send_error(404)
