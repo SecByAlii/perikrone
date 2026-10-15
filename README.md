@@ -46,7 +46,9 @@ python3 run.py --watch           # monitor: re-scan on a schedule, alert if post
 
 `--serve` is the app: it opens Perikrone in your browser, you pick a source and
 hit **Run assessment**, and the posture dashboard renders live. Local-only
-(binds to 127.0.0.1).
+(binds to 127.0.0.1). Pick the **"guided — enter your own"** source to fill in a
+practice's accounts right in the browser (no terminal, no API) and get the same
+scored dashboard — so a non-technical office can assess itself.
 
 By default Perikrone writes a **self-contained HTML dashboard** to `reports/`
 (double-click to open, prints to PDF) plus a Markdown version with `--format md`.
