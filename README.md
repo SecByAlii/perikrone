@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="brand/perikrone-logo.png" alt="Perikrone — closest-point security" width="620">
+</div>
+
 # Perikrone
 
 **A read-only security-posture auditor for small medical practices.** Point it at
@@ -10,6 +14,16 @@ _Closest-point security._
 > **Read-only by design.** Perikrone reads configuration and reports on it. It
 > never writes to, changes, or accesses patient data in any system. It's an
 > assessment tool, not an admin tool — safe to point at a real environment.
+
+## See it in action
+
+It scans a practice live and names exactly who's exposed:
+
+![Perikrone scanning a practice — catching missing MFA, stale accounts, admin sprawl, and guest access, with the affected accounts named](docs/screenshots/scan.jpg)
+
+Then it scores the posture and hands over a plain-English, HIPAA-mapped dashboard with a prioritized fix plan:
+
+![Perikrone dashboard — a 27/100 posture score, severity breakdown, bottom-line verdict, and a step-by-step action plan](docs/screenshots/dashboard.jpg)
 
 ---
 
