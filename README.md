@@ -1,5 +1,10 @@
 <div align="center">
   <img src="brand/perikrone-logo.png" alt="Perikrone — closest-point security" width="620">
+
+  ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-3776AB)
+  ![Dependencies: none](https://img.shields.io/badge/dependencies-none-2e8b57)
+  ![Mode: read-only](https://img.shields.io/badge/mode-read--only-38c6e0)
+  ![HIPAA-mapped](https://img.shields.io/badge/findings-HIPAA--mapped-e3b23c)
 </div>
 
 # Perikrone
@@ -137,6 +142,15 @@ run.py                   CLI entry point
   NextGen, Tebra). Deferred on purpose — no universal EHR API, each vendor is a
   partner-gated integration, and reading the EHR means touching PHI. Gated on a
   real paying practice and a signed agreement.
+
+## Development
+
+No dependencies to install — everything runs on the Python standard library (3.10+).
+Run the test suite:
+
+```bash
+python3 -m unittest discover -s tests
+```
 
 ## Scope & disclaimer
 
