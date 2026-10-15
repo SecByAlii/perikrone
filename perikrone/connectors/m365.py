@@ -19,13 +19,11 @@ tested against captured real-shape Graph data without a live tenant.
 
 from __future__ import annotations
 
-import json
 import os
 import urllib.error
-import urllib.parse
-import urllib.request
 from datetime import datetime, timezone
 
+from ._http import get_json, post_form
 from .base import Connector, validate_snapshot
 
 _LOGIN = "https://login.microsoftonline.com"
@@ -64,15 +62,14 @@ class M365Connector(Connector):
         return snapshot
 
     def _token(self) -> str:
-        data = urllib.parse.urlencode({
-            "client_id": self.client_id,
-            "scope": "https://graph.microsoft.com/.default",
-            "client_secret": self.client_secret,
-            "grant_type": "client_credentials",
-        }).encode()
         url = f"{_LOGIN}/{self.tenant_id}/oauth2/v2.0/token"
         try:
-            return _post_form(url, data)["access_token"]
+            return post_form(url, {
+                "client_id": self.client_id,
+                "scope": "https://graph.microsoft.com/.default",
+                "client_secret": self.client_secret,
+                "grant_type": "client_credentials",
+            })["access_token"]
         except urllib.error.HTTPError as exc:
             raise ValueError(
                 f"Microsoft sign-in failed (HTTP {exc.code}). Check the tenant id, "
@@ -95,8 +92,8 @@ class M365Connector(Connector):
             mfa_ids = None  # couldn't determine MFA -> normalize won't false-flag
 
         try:
-            sd = _get(f"{_GRAPH}/policies/identitySecurityDefaultsEnforcementPolicy",
-                      token)
+            sd = get_json(
+                f"{_GRAPH}/policies/identitySecurityDefaultsEnforcementPolicy", token)
             security_defaults = sd.get("isEnabled")
         except urllib.error.HTTPError:
             security_defaults = None
@@ -151,28 +148,13 @@ def normalize(bundle: dict) -> dict:
     }
 
 
-# ---- Graph HTTP helpers (stdlib only) ----------------------------------------
-
-def _post_form(url: str, data: bytes) -> dict:
-    req = urllib.request.Request(
-        url, data=data,
-        headers={"Content-Type": "application/x-www-form-urlencoded"})
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        return json.loads(resp.read().decode("utf-8"))
-
-
-def _get(url: str, token: str) -> dict:
-    req = urllib.request.Request(
-        url, headers={"Authorization": f"Bearer {token}", "Accept": "application/json"})
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        return json.loads(resp.read().decode("utf-8"))
-
+# ---- Graph paging (HTTP primitives live in ._http) ---------------------------
 
 def _graph_all(url: str, token: str) -> list:
     """GET a collection, following @odata.nextLink paging."""
     items: list = []
     while url:
-        page = _get(url, token)
+        page = get_json(url, token)
         items.extend(page.get("value", []))
         url = page.get("@odata.nextLink")
     return items

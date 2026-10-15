@@ -8,12 +8,14 @@ from .base import Connector, validate_snapshot
 from .demo import DemoConnector
 from .manual import ManualConnector
 from .m365 import M365Connector
+from .google_workspace import GoogleWorkspaceConnector
 
-# name -> connector class. Add Google Workspace here as it lands.
+# name -> connector class.
 REGISTRY: dict[str, type[Connector]] = {
     DemoConnector.name: DemoConnector,
     ManualConnector.name: ManualConnector,
     M365Connector.name: M365Connector,
+    GoogleWorkspaceConnector.name: GoogleWorkspaceConnector,
 }
 
 
@@ -37,6 +39,7 @@ __all__ = [
     "DemoConnector",
     "ManualConnector",
     "M365Connector",
+    "GoogleWorkspaceConnector",
     "REGISTRY",
     "available_sources",
     "get_connector",

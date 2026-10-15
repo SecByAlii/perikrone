@@ -334,6 +334,10 @@ def _shell() -> str:
         "PERIKRONE_M365_TENANT_ID", "PERIKRONE_M365_CLIENT_ID",
         "PERIKRONE_M365_CLIENT_SECRET")):
         skip.add("m365")
+    if not all(os.environ.get(k) for k in (
+        "PERIKRONE_GOOGLE_CLIENT_ID", "PERIKRONE_GOOGLE_CLIENT_SECRET",
+        "PERIKRONE_GOOGLE_REFRESH_TOKEN")):
+        skip.add("google")
     opts = "".join(
         f'<option value="{s}">{s}</option>'
         for s in available_sources() if s not in skip
