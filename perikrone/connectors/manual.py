@@ -46,41 +46,26 @@ class ManualConnector(Connector):
 
         _say("")
         _say("  Now each account. Enter a name to add one, or 'done' to finish.")
-        users = []
+        accounts = []
         while True:
             _say("")
-            name = _ask(f"  Account #{len(users) + 1} name (or 'done')", "done")
+            name = _ask(f"  Account #{len(accounts) + 1} name (or 'done')", "done")
             if name.strip().lower() == "done":
                 break
-            email = _ask("    Email (optional)", "")
-            enabled = _ask_ynu("    Is the account currently enabled/active?", default=True)
-            mfa = _ask_ynu("    Does it have multi-factor authentication (MFA) on?")
-            admin = _ask_ynu("    Does it have full administrator rights?", default=False)
-            guest = _ask_ynu("    Is this an outside / guest account (not staff)?", default=False)
-            last = _ask_usage("    When was it last used?")
-
-            users.append({
-                "id": f"manual-{len(users) + 1:03d}",
-                "display_name": name.strip(),
-                "email": email.strip(),
-                "enabled": True if enabled is None else enabled,
-                "mfa_enabled": bool(mfa),
-                "is_admin": bool(admin),
-                "account_type": "guest" if guest else "member",
-                "last_sign_in": last,
+            accounts.append({
+                "name": name,
+                "email": _ask("    Email (optional)", ""),
+                "enabled": _ask_ynu("    Is the account currently enabled/active?", default=True),
+                "mfa_enabled": bool(_ask_ynu(
+                    "    Does it have multi-factor authentication (MFA) on?")),
+                "is_admin": bool(_ask_ynu(
+                    "    Does it have full administrator rights?", default=False)),
+                "guest": bool(_ask_ynu(
+                    "    Is this an outside / guest account (not staff)?", default=False)),
+                "last_sign_in": _ask_usage("    When was it last used?"),
             })
 
-        snapshot = {
-            "practice_name": practice.strip() or "My Practice",
-            "source": self.name,
-            "collected_at": _now_iso(),
-            # y/n/unknown -> True/False/None. 'security_defaults_enabled' stores
-            # whether defaults are ON; checks only fire on an explicit False.
-            "security_defaults_enabled": sec_def,
-            "legacy_auth_allowed": legacy,
-            "users": users,
-        }
-        validate_snapshot(snapshot)
+        snapshot = build_snapshot(practice, sec_def, legacy, accounts, source=self.name)
         self._save(snapshot)
         return snapshot
 
@@ -93,6 +78,56 @@ class ManualConnector(Connector):
         _say("")
         _say(f"  Saved your answers to {path}")
         _say(f"  (re-run anytime with:  python3 run.py --source demo --data {path})")
+
+
+# ---- shared snapshot builder (used by the CLI above and the in-app web form) --
+
+def build_snapshot(practice_name, security_defaults, legacy_auth, accounts,
+                   source="manual") -> dict:
+    """Turn guided answers into a normalized snapshot the engine understands.
+
+    `security_defaults` / `legacy_auth` are True / False / None (None = unknown).
+    Each account in `accounts` is a dict: name, email, enabled (True/False/None;
+    None -> enabled), mfa_enabled (bool), is_admin (bool), guest (bool), and
+    last_sign_in (ISO string or None, already resolved via usage_to_last_sign_in).
+    """
+    users = []
+    for i, a in enumerate(accounts, 1):
+        enabled = a.get("enabled")
+        users.append({
+            "id": a.get("id") or f"{source}-{i:03d}",
+            "display_name": (a.get("name") or "").strip() or f"Account {i}",
+            "email": (a.get("email") or "").strip(),
+            "enabled": True if enabled is None else bool(enabled),
+            "mfa_enabled": bool(a.get("mfa_enabled", False)),
+            "is_admin": bool(a.get("is_admin", False)),
+            "account_type": "guest" if a.get("guest") else "member",
+            "last_sign_in": a.get("last_sign_in"),
+        })
+    snapshot = {
+        "practice_name": (practice_name or "").strip() or "My Practice",
+        "source": source,
+        "collected_at": _now_iso(),
+        "security_defaults_enabled": security_defaults,
+        "legacy_auth_allowed": legacy_auth,
+        "users": users,
+    }
+    validate_snapshot(snapshot)
+    return snapshot
+
+
+def usage_to_last_sign_in(code):
+    """Map a plain usage answer to a last_sign_in value the engine understands:
+    recently -> now (not stale); long ago -> 180 days ago (stale); never -> None
+    (never signed in); unknown -> now (we can't tell, so we don't flag it)."""
+    c = (code or "").strip().lower()
+    if c in ("r", "recent", "recently"):
+        return _now_iso()
+    if c in ("o", "old", "long ago"):
+        return _days_ago_iso(180)
+    if c in ("x", "never"):
+        return None
+    return _now_iso()  # unknown / blank -> don't false-flag staleness
 
 
 # ---- prompt helpers ----------------------------------------------------------
@@ -127,22 +162,15 @@ def _ask_ynu(prompt: str, default: bool | None = None):
 
 
 def _ask_usage(prompt: str):
-    """Map plain usage answers to a last_sign_in value the engine understands.
-    recent -> now (not stale); old -> 180 days ago (stale); never -> null
-    (never signed in); unknown -> now (we can't tell, so we don't flag it)."""
+    """Prompt for usage and resolve it via the shared usage_to_last_sign_in()."""
     while True:
         resp = _ask(
             f"{prompt} (r=recently / o=a long time ago / x=never / u=unknown)",
             "r",
         ).strip().lower()
-        if resp in ("r", "recent", "recently"):
-            return _now_iso()
-        if resp in ("o", "old"):
-            return _days_ago_iso(180)
-        if resp in ("x", "never"):
-            return None
-        if resp in ("u", "unknown", "?"):
-            return _now_iso()
+        if resp in ("r", "recent", "recently", "o", "old", "x", "never",
+                    "u", "unknown", "?"):
+            return usage_to_last_sign_in(resp)
         _say("    Please answer r, o, x, or u.")
 
 
