@@ -18,16 +18,17 @@ token. Pure standard library (urllib). Fetch (network) and normalize (pure
 transform) are split so the mapping is testable against captured sample data.
 
 Scope note: Google Workspace has no single "security defaults" or "legacy auth"
-toggle like Entra, and the Directory has no guest/external user type, so those
-two checks don't apply here and are left unset rather than guessed. The identity
-checks that do apply -- missing 2-Step Verification, stale accounts, and
-administrator sprawl -- map directly.
+toggle like Entra, so those two checks don't apply here and are left unset rather
+than guessed. The checks that do apply map directly: missing 2-Step Verification
+(no MFA), stale accounts, administrator sprawl, and guest/external accounts (via
+the Directory's `isGuestUser` flag).
 """
 
 from __future__ import annotations
 
 import os
 import urllib.error
+import urllib.parse
 from datetime import datetime, timezone
 
 from ._http import get_json, post_form
@@ -89,7 +90,7 @@ class GoogleWorkspaceConnector(Connector):
             url = (f"{_DIRECTORY}?customer={self.customer}&maxResults=500"
                    "&projection=full&orderBy=email")
             if page_token:
-                url += f"&pageToken={page_token}"
+                url += f"&pageToken={urllib.parse.quote(page_token, safe='')}"
             page = get_json(url, token)
             users.extend(page.get("users", []))
             page_token = page.get("nextPageToken")
@@ -114,7 +115,7 @@ def normalize(bundle: dict) -> dict:
             "enabled": not bool(u.get("suspended", False)),
             "mfa_enabled": bool(u.get("isEnrolledIn2Sv", False)),
             "is_admin": bool(u.get("isAdmin", False)),  # super administrator
-            "account_type": "member",  # directory users are internal; no guest type
+            "account_type": "guest" if u.get("isGuestUser") else "member",
             "last_sign_in": last,
         })
 

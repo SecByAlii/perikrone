@@ -26,7 +26,7 @@ class TestGoogleNormalize(unittest.TestCase):
         s = self.snapshot
         self.assertEqual(s["source"], "google")
         self.assertEqual(s["practice_name"], "baysidedental.example (Google Workspace)")
-        self.assertEqual(len(s["users"]), 7)
+        self.assertEqual(len(s["users"]), 8)
         # Google-inapplicable checks are left unset, not guessed.
         self.assertIsNone(s["security_defaults_enabled"])
         self.assertIsNone(s["legacy_auth_allowed"])
@@ -38,6 +38,9 @@ class TestGoogleNormalize(unittest.TestCase):
         self.assertTrue(by_email["r.delgado@baysidedental.example"]["mfa_enabled"])
         # suspended -> not enabled
         self.assertFalse(by_email["former.biller@baysidedental.example"]["enabled"])
+        # isGuestUser -> guest account type
+        self.assertEqual(
+            by_email["contractor@external-billing.example"]["account_type"], "guest")
 
     def test_never_login_becomes_none(self):
         by_email = {u["email"]: u for u in self.snapshot["users"]}
@@ -45,12 +48,12 @@ class TestGoogleNormalize(unittest.TestCase):
 
     def test_applicable_findings_detected(self):
         ids = {f.check_id for f in self.result.findings}
-        for expected in ("no-mfa", "stale-accounts", "admin-sprawl"):
+        # Guest accounts are mapped (isGuestUser), so external-access applies too.
+        for expected in ("no-mfa", "stale-accounts", "admin-sprawl", "external-access"):
             self.assertIn(expected, ids)
-        # These don't apply to Google and must NOT fire.
+        # These have no Google equivalent and must NOT fire.
         self.assertNotIn("security-defaults-off", ids)
         self.assertNotIn("legacy-auth-allowed", ids)
-        self.assertNotIn("external-access", ids)
 
 
 if __name__ == "__main__":

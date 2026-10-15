@@ -18,8 +18,11 @@ Google client libraries, no service-account key signing).
    SDK API" → Enable).
 2. **OAuth consent screen** → User type **Internal** → add the scope
    `https://www.googleapis.com/auth/admin.directory.user.readonly`.
-3. **Credentials → Create credentials → OAuth client ID → Desktop app.** Copy the
-   **Client ID** and **Client secret**.
+3. **Credentials → Create credentials → OAuth client ID → Web application.** Under
+   **Authorized redirect URIs**, add `https://developers.google.com/oauthplayground`.
+   Copy the **Client ID** and **Client secret**.
+   (The OAuth 2.0 Playground in the next step requires a *web-application* client
+   with that redirect URI — a Desktop client won't work there.)
 
 ## 2. Get a refresh token (one time, as a Workspace admin)
 
@@ -64,10 +67,10 @@ Google Workspace maps cleanly onto the **identity** checks:
 - **Stale accounts** — from `lastLoginTime` (a never-logged-in account is reported
   as such).
 - **Administrator sprawl** — from `isAdmin` (super administrators).
+- **Guest / external accounts** — from the Directory's `isGuestUser` flag.
 
-Two checks are **M365-specific and don't apply** here, so they're left unset
-rather than guessed:
+One area is **M365-specific and doesn't apply** here, so it's left unset rather
+than guessed:
 
 - **Security defaults / legacy auth** — Google has no single equivalent toggle.
-- **Guest / external accounts** — the Directory has no guest user type (external
-  sharing lives in Drive/sharing settings, out of scope for v1).
+  (In-app file-sharing settings live in Drive, out of scope for v1.)

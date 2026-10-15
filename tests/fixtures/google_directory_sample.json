@@ -64,6 +64,16 @@
       "isAdmin": false,
       "isEnrolledIn2Sv": false,
       "lastLoginTime": "2026-02-01T10:00:00.000Z"
+    },
+    {
+      "id": "100000000000000000008",
+      "primaryEmail": "contractor@external-billing.example",
+      "name": {"fullName": "External Billing Contractor"},
+      "suspended": false,
+      "isAdmin": false,
+      "isEnrolledIn2Sv": true,
+      "isGuestUser": true,
+      "lastLoginTime": "2026-10-10T09:00:00.000Z"
     }
   ]
 }
