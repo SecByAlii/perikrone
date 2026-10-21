@@ -22,6 +22,14 @@ class TestConsoleLinks(unittest.TestCase):
             "https://admin.clinic.example")
         self.assertIsNone(_console_for("other", None))  # no URL -> no button
 
+    def test_other_rejects_unsafe_urls(self):
+        # Only absolute https URLs with a host are allowed as custom links.
+        self.assertIsNone(_console_for("other", "http://admin.clinic.example"))
+        self.assertIsNone(_console_for("other", "javascript:alert(1)"))
+        self.assertIsNone(_console_for("other", "/relative/path"))
+        self.assertEqual(
+            _console_for("other", "https://ok.example")[1], "https://ok.example")
+
     def test_platform_propagates(self):
         self.assertEqual(assess(DemoConnector().collect()).platform, "microsoft")
         google = assess(g_normalize(json.loads(_GOOGLE_FIXTURE.read_text())))

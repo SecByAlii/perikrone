@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import html
 import math
+from urllib.parse import urlparse
 
 from .engine import AssessmentResult
 from .findings import Finding, Severity
@@ -444,12 +445,24 @@ def _bottom_line(result: AssessmentResult) -> str:
     )
 
 
+def _safe_https(url):
+    """Accept only an absolute https:// URL with a host; reject anything else
+    (http, javascript:, data:, relative) so a custom link can't be cleartext or a
+    scheme-injection vector."""
+    try:
+        p = urlparse((url or "").strip())
+    except ValueError:
+        return None
+    return p.geturl() if p.scheme == "https" and p.netloc else None
+
+
 def _console_for(platform: str, admin_url: str | None):
     """The right admin console (label, url) for the practice's platform."""
     if platform == "google":
         return ("Open the Google Admin console", "https://admin.google.com")
     if platform == "other":
-        return ("Open your admin console", admin_url) if admin_url else None
+        safe = _safe_https(admin_url)
+        return ("Open your admin console", safe) if safe else None
     return ("Open the Microsoft 365 admin center", "https://admin.microsoft.com")
 
 
