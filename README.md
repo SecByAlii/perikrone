@@ -48,7 +48,9 @@ python3 run.py --watch           # monitor: re-scan on a schedule, alert if post
 hit **Run assessment**, and the posture dashboard renders live. Local-only
 (binds to 127.0.0.1). Pick the **"guided — enter your own"** source to fill in a
 practice's accounts right in the browser (no terminal, no API) and get the same
-scored dashboard — so a non-technical office can assess itself.
+scored dashboard — so a non-technical office can assess itself. Perikrone
+**remembers the practice** (saved locally, git-ignored), so next time the form is
+pre-filled — just add or remove staff as people are hired or leave, and re-scan.
 
 By default Perikrone writes a **self-contained HTML dashboard** to `reports/`
 (double-click to open, prints to PDF) plus a Markdown version with `--format md`.
