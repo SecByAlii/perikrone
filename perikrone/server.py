@@ -21,6 +21,11 @@ from . import history
 from .engine import AssessmentResult, assess_by_step
 from .report_html import render_html
 from .connectors import available_sources, get_connector
+from .connectors.manual import build_snapshot, usage_to_last_sign_in
+
+# The in-app "guided" assessment holds the submitted snapshot in memory (single
+# local user), so the scan animation and dashboard can both read it.
+_guided_snapshot = None
 
 # Demo-only: check_ids the user has "marked as fixed" this session, so a re-scan
 # shows them clearing and the score climbing. The real connectors re-read reality,
@@ -43,6 +48,50 @@ def _apply_resolved(result, steps, source):
     )
     return new_result, new_steps
 
+
+def _collect(source):
+    """Snapshot for a source: the in-memory guided one, or the connector's."""
+    if source == "guided":
+        if _guided_snapshot is None:
+            raise ValueError("No guided assessment has been submitted yet.")
+        return _guided_snapshot
+    return get_connector(source).collect()
+
+
+def _tri(value):
+    """Yes / no / unknown (from the form) -> True / False / None."""
+    if value in (True, "yes", "y", "true"):
+        return True
+    if value in (False, "no", "n", "false"):
+        return False
+    return None
+
+
+def _store_guided(data):
+    """Build and store a snapshot from the in-app guided form's JSON."""
+    global _guided_snapshot
+    if not isinstance(data, dict):
+        raise ValueError("guided payload must be a JSON object")
+    accounts = []
+    for a in data.get("accounts", []):
+        if not isinstance(a, dict):
+            continue
+        accounts.append({
+            "name": a.get("name", ""),
+            "email": a.get("email", ""),
+            "enabled": a.get("enabled", True),
+            "mfa_enabled": a.get("mfa") == "yes",      # "no"/"unknown" -> flagged
+            "is_admin": bool(a.get("admin")),
+            "guest": bool(a.get("guest")),
+            "last_sign_in": usage_to_last_sign_in(a.get("usage")),
+        })
+    _guided_snapshot = build_snapshot(
+        data.get("practice_name", ""),
+        _tri(data.get("security_defaults")),
+        _tri(data.get("legacy_auth")),
+        accounts, source="guided")
+
+
 _MARK = """<svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
   <ellipse cx="13" cy="13" rx="12" ry="4.2" fill="none" stroke="#e3b23c" stroke-width="1.6"
     transform="rotate(-20 13 13)"/>
@@ -55,7 +104,8 @@ _SHELL = """<!doctype html>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Perikrone</title>
 <style>
-  :root{--brand:#38c6e0;--brand2:#6ee7f0;--saturn:#e3b23c;--muted:#9fb1c6}
+  :root{--brand:#38c6e0;--brand2:#6ee7f0;--saturn:#e3b23c;--muted:#9fb1c6;
+    --surface:rgba(255,255,255,.035);--surface2:rgba(255,255,255,.065);--line:rgba(255,255,255,.10)}
   *{box-sizing:border-box} html,body{height:100%}
   body{margin:0;background:linear-gradient(180deg,#0b1120,#080d18);color:#e9eff7;
     font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -114,6 +164,31 @@ _SHELL = """<!doctype html>
   .pill.Low{background:#4dabf7}.pill.Info{background:#8aa0b6}
   .rdone{max-width:780px;width:100%;margin:22px auto 0;display:none}
   .summary{font-size:16px;margin-bottom:14px}
+  .guided{display:none;max-width:880px;width:100%;margin:0 auto;padding:26px 24px;overflow:auto}
+  .gtitle{font-size:22px;margin:0 0 4px} .ghint{color:var(--muted);font-size:14px;margin:0 0 18px}
+  .gfield{margin:0 0 14px}
+  .gfield label{display:block;font-size:13px;color:var(--muted);margin-bottom:5px}
+  .gfield input,.gfield select{width:100%;background:#0e1626;color:#e9eff7;
+    border:1px solid rgba(255,255,255,.18);border-radius:9px;padding:9px 11px;font-size:14px}
+  .grow2{display:flex;gap:14px;flex-wrap:wrap} .grow2 .gfield{flex:1 1 300px}
+  .gsub{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--brand);margin:22px 0 10px}
+  .acct{display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--surface);
+    border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0}
+  .acct input[type=text]{background:#0e1626;color:#e9eff7;border:1px solid rgba(255,255,255,.18);
+    border-radius:8px;padding:7px 9px;font-size:13.5px}
+  .acct .a-name{flex:1 1 150px} .acct .a-email{flex:1 1 170px}
+  .acct select{background:#0e1626;color:#e9eff7;border:1px solid rgba(255,255,255,.18);
+    border-radius:8px;padding:7px 8px;font-size:13px}
+  .achk{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--muted);white-space:nowrap}
+  .achk input{accent-color:var(--brand)}
+  .arm{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:8px;
+    width:30px;height:30px;cursor:pointer;font-size:16px;line-height:1}
+  .gadd{background:var(--surface2);border:1px solid rgba(56,198,224,.3);color:var(--brand2);
+    border-radius:9px;padding:9px 14px;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:6px}
+  .gactions{display:flex;align-items:center;gap:14px;margin-top:20px}
+  .gscan{background:var(--brand);color:#06121a;border:0;border-radius:10px;padding:11px 20px;
+    font-size:15px;font-weight:700;cursor:pointer}
+  .gerr{color:#ff6b6b;font-size:13.5px}
 </style></head>
 <body>
   <header>
@@ -123,7 +198,7 @@ _SHELL = """<!doctype html>
     <div class="controls">
       <label for="src" style="color:var(--muted);font-size:13px">Source</label>
       <select id="src">__OPTIONS__</select>
-      <button id="run" onclick="runScan()">Run assessment</button>
+      <button id="run" onclick="onRun()">Run assessment</button>
     </div>
   </header>
   <main>
@@ -148,6 +223,32 @@ _SHELL = """<!doctype html>
       <div class="rdone" id="rdone"></div>
     </div>
     <iframe id="frame" title="Assessment dashboard" style="display:none"></iframe>
+    <div class="guided" id="guided">
+      <h2 class="gtitle">Guided assessment</h2>
+      <p class="ghint">Answer a few questions about the practice and Perikrone scores it
+        just like a live scan. It all runs on this machine — nothing is sent anywhere.</p>
+      <div class="gfield">
+        <label>Practice name</label>
+        <input id="g-practice" type="text" placeholder="e.g. Cypress Eye Associates">
+      </div>
+      <div class="grow2">
+        <div class="gfield">
+          <label>Are baseline security protections (security defaults) turned on?</label>
+          <select id="g-secdef"><option value="unknown">Not sure</option><option value="yes">Yes</option><option value="no">No</option></select>
+        </div>
+        <div class="gfield">
+          <label>Are old sign-in methods (legacy authentication) allowed?</label>
+          <select id="g-legacy"><option value="unknown">Not sure</option><option value="yes">Yes</option><option value="no">No</option></select>
+        </div>
+      </div>
+      <h3 class="gsub">Accounts</h3>
+      <div id="g-accounts"></div>
+      <button class="gadd" type="button" onclick="addAccount()">+ Add account</button>
+      <div class="gactions">
+        <button class="gscan" type="button" onclick="submitGuided()">Run assessment</button>
+        <span class="gerr" id="g-err"></span>
+      </div>
+    </div>
   </main>
 <script>
   var curSource=null, _cv=0;
@@ -156,10 +257,57 @@ _SHELL = """<!doctype html>
   // Called by the dashboard (in the iframe) after a "Mark as fixed" click:
   // re-scan WITHOUT resetting, so the fixed item clears and the score climbs.
   window.perikroneRescan = function(){ runScan(false); };
+  // The header button: show the guided form for 'guided', otherwise scan.
+  function onRun(){
+    if(el('src').value === 'guided'){ showGuided(); } else { runScan(true); }
+  }
+  function showGuided(){
+    el('empty').style.display='none';
+    el('running').style.display='none';
+    el('frame').style.display='none';
+    el('guided').style.display='block';
+    if(!el('g-accounts').children.length){ addAccount(); addAccount(); }
+  }
+  function addAccount(){
+    var d=document.createElement('div'); d.className='acct';
+    d.innerHTML='<input class="a-name" type="text" placeholder="Name">'+
+      '<input class="a-email" type="text" placeholder="Email (optional)">'+
+      '<select class="a-mfa"><option value="unknown">MFA: not sure</option><option value="yes">MFA: yes</option><option value="no">MFA: no</option></select>'+
+      '<select class="a-usage"><option value="recently">Used recently</option><option value="old">Used long ago</option><option value="never">Never used</option><option value="unknown">Not sure</option></select>'+
+      '<label class="achk"><input type="checkbox" class="a-admin"> Admin</label>'+
+      '<label class="achk"><input type="checkbox" class="a-guest"> Guest</label>'+
+      '<label class="achk"><input type="checkbox" class="a-enabled" checked> Enabled</label>'+
+      '<button class="arm" type="button" title="Remove">&times;</button>';
+    d.querySelector('.arm').onclick=function(){ d.remove(); };
+    el('g-accounts').appendChild(d);
+  }
+  function submitGuided(){
+    var rows=[].slice.call(document.querySelectorAll('#g-accounts .acct'));
+    var accounts=rows.map(function(r){
+      return {name:r.querySelector('.a-name').value, email:r.querySelector('.a-email').value,
+        mfa:r.querySelector('.a-mfa').value, usage:r.querySelector('.a-usage').value,
+        admin:r.querySelector('.a-admin').checked, guest:r.querySelector('.a-guest').checked,
+        enabled:r.querySelector('.a-enabled').checked};
+    }).filter(function(a){ return a.name.trim(); });
+    if(!accounts.length){ el('g-err').textContent='Add at least one account (with a name).'; return; }
+    el('g-err').textContent='';
+    fetch('/guided',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({practice_name:el('g-practice').value,
+        security_defaults:el('g-secdef').value, legacy_auth:el('g-legacy').value,
+        accounts:accounts})})
+      .then(function(r){return r.json();})
+      .then(function(res){
+        if(res.error){ el('g-err').textContent=res.error; return; }
+        el('guided').style.display='none';
+        runScan(false);
+      })
+      .catch(function(){ el('g-err').textContent='Could not reach the server — try again.'; });
+  }
   function runScan(reset){
     if(reset === undefined){ reset = true; }  // the header button starts fresh
     curSource = el('src').value; _cv = 0;
     el('empty').style.display='none';
+    el('guided').style.display='none';
     el('frame').style.display='none';
     el('run').disabled=true;
     el('running').style.display='flex';
@@ -243,6 +391,19 @@ _SHELL = """<!doctype html>
 
 
 class _Handler(BaseHTTPRequestHandler):
+    def do_POST(self):  # noqa: N802
+        parsed = urlparse(self.path)
+        if parsed.path == "/guided":
+            length = int(self.headers.get("Content-Length") or 0)
+            raw = self.rfile.read(length) if length else b"{}"
+            try:
+                _store_guided(json.loads(raw.decode("utf-8")))
+                self._send_json({"ok": True})
+            except (ValueError, TypeError, AttributeError) as exc:
+                self._send_json({"error": str(exc)})
+        else:
+            self.send_error(404)
+
     def do_GET(self):  # noqa: N802
         parsed = urlparse(self.path)
         query = parse_qs(parsed.query)
@@ -275,7 +436,7 @@ class _Handler(BaseHTTPRequestHandler):
 
     def _scan_json(self, source: str) -> dict:
         try:
-            snapshot = get_connector(source).collect()
+            snapshot = _collect(source)
         except Exception as exc:
             return {"error": str(exc)}
         result, steps = assess_by_step(snapshot)
@@ -301,7 +462,7 @@ class _Handler(BaseHTTPRequestHandler):
 
     def _dashboard(self, source: str) -> str:
         try:
-            snapshot = get_connector(source).collect()
+            snapshot = _collect(source)
             result, steps = assess_by_step(snapshot)
             result, _ = _apply_resolved(result, steps, source)
             trend = history.trend_for(result.practice_name)
@@ -342,6 +503,8 @@ def _shell() -> str:
         f'<option value="{s}">{s}</option>'
         for s in available_sources() if s not in skip
     )
+    # 'guided' is an in-app form, not a connector, so add it explicitly.
+    opts += '<option value="guided">guided — enter your own</option>'
     return _SHELL.replace("__MARK__", _MARK).replace("__OPTIONS__", opts)
 
 
