@@ -194,10 +194,11 @@ def render_html(result: AssessmentResult, interactive: bool = False,
 
     trend_html = _trend_card(trend)
     plan_html = _action_plan(ranked)
+    console = _console_for(result.platform, result.admin_url)
     findings_html = ""
     if ranked:
         findings_html = '<h3 class="section">What we found</h3>' + "".join(
-            _finding_card(f, interactive) for f in ranked
+            _finding_card(f, interactive, console) for f in ranked
         )
 
     resolve_script = (
@@ -443,7 +444,16 @@ def _bottom_line(result: AssessmentResult) -> str:
     )
 
 
-def _finding_card(f: Finding, interactive: bool = False) -> str:
+def _console_for(platform: str, admin_url: str | None):
+    """The right admin console (label, url) for the practice's platform."""
+    if platform == "google":
+        return ("Open the Google Admin console", "https://admin.google.com")
+    if platform == "other":
+        return ("Open your admin console", admin_url) if admin_url else None
+    return ("Open the Microsoft 365 admin center", "https://admin.microsoft.com")
+
+
+def _finding_card(f: Finding, interactive: bool = False, console=None) -> str:
     label, cls = _ACTION[f.severity]
     affected = ""
     if f.affected:
@@ -456,10 +466,11 @@ def _finding_card(f: Finding, interactive: bool = False) -> str:
             for s in f.fix
         )
         checklist = f"<ol class='checklist'>{steps}</ol>" if steps else ""
-        buttons = [
-            '<a class="btn primary" href="https://admin.microsoft.com" '
-            'target="_blank" rel="noopener">Open the admin console</a>'
-        ]
+        buttons = []
+        if console:
+            buttons.append(
+                f'<a class="btn primary" href="{html.escape(console[1])}" '
+                f'target="_blank" rel="noopener">{html.escape(console[0])}</a>')
         for text, url in f.fix_links:
             buttons.append(
                 f'<a class="btn ghost" href="{html.escape(url)}" '

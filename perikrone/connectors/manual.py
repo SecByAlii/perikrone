@@ -83,7 +83,7 @@ class ManualConnector(Connector):
 # ---- shared snapshot builder (used by the CLI above and the in-app web form) --
 
 def build_snapshot(practice_name, security_defaults, legacy_auth, accounts,
-                   source="manual") -> dict:
+                   source="manual", platform="microsoft", admin_url=None) -> dict:
     """Turn guided answers into a normalized snapshot the engine understands.
 
     `security_defaults` / `legacy_auth` are True / False / None (None = unknown).
@@ -107,6 +107,8 @@ def build_snapshot(practice_name, security_defaults, legacy_auth, accounts,
     snapshot = {
         "practice_name": (practice_name or "").strip() or "My Practice",
         "source": source,
+        "platform": platform or "microsoft",
+        "admin_url": (admin_url or "").strip() or None,
         "collected_at": _now_iso(),
         "security_defaults_enabled": security_defaults,
         "legacy_auth_allowed": legacy_auth,

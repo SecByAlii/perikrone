@@ -139,6 +139,7 @@ def normalize(bundle: dict) -> dict:
     return {
         "practice_name": bundle.get("organization_name", "Microsoft 365 tenant"),
         "source": "m365",
+        "platform": "microsoft",
         "collected_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "security_defaults_enabled": bundle.get("security_defaults_enabled"),
         # Legacy-auth state has no single clean Graph flag; left for a later
