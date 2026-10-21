@@ -17,7 +17,7 @@ import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs
 
-from . import history
+from . import history, profile
 from .engine import AssessmentResult, assess_by_step
 from .report_html import render_html
 from .connectors import available_sources, get_connector
@@ -282,9 +282,20 @@ _SHELL = """<!doctype html>
     el('running').style.display='none';
     el('frame').style.display='none';
     el('guided').style.display='block';
-    if(!el('g-accounts').children.length){ addAccount(); addAccount(); }
+    if(el('g-accounts').children.length){ return; }  // keep edits already on screen
+    fetch('/profile').then(function(r){return r.json();}).then(function(p){
+      el('g-accounts').innerHTML='';
+      if(p && (p.accounts||[]).length){           // returning practice: pre-fill
+        el('g-practice').value = p.practice_name || '';
+        el('g-platform').value = p.platform || 'microsoft'; onPlatform();
+        el('g-adminurl').value = p.admin_url || '';
+        el('g-secdef').value = p.security_defaults || 'unknown';
+        el('g-legacy').value = p.legacy_auth || 'unknown';
+        p.accounts.forEach(function(a){ addAccount(a); });
+      } else { addAccount(); addAccount(); }       // first run: two blank rows
+    }).catch(function(){ if(!el('g-accounts').children.length){ addAccount(); addAccount(); } });
   }
-  function addAccount(){
+  function addAccount(a){
     var d=document.createElement('div'); d.className='acct';
     d.innerHTML='<input class="a-name" type="text" placeholder="Name">'+
       '<input class="a-email" type="text" placeholder="Email (optional)">'+
@@ -296,6 +307,15 @@ _SHELL = """<!doctype html>
       '<button class="arm" type="button" title="Remove">&times;</button>';
     d.querySelector('.arm').onclick=function(){ d.remove(); };
     el('g-accounts').appendChild(d);
+    if(a){
+      d.querySelector('.a-name').value = a.name || '';
+      d.querySelector('.a-email').value = a.email || '';
+      if(a.mfa){ d.querySelector('.a-mfa').value = a.mfa; }
+      if(a.usage){ d.querySelector('.a-usage').value = a.usage; }
+      d.querySelector('.a-admin').checked = !!a.admin;
+      d.querySelector('.a-guest').checked = !!a.guest;
+      d.querySelector('.a-enabled').checked = a.enabled !== false;
+    }
   }
   function onPlatform(){
     el('g-adminwrap').style.display = (el('g-platform').value === 'other') ? 'block' : 'none';
@@ -417,7 +437,9 @@ class _Handler(BaseHTTPRequestHandler):
             length = int(self.headers.get("Content-Length") or 0)
             raw = self.rfile.read(length) if length else b"{}"
             try:
-                _store_guided(json.loads(raw.decode("utf-8")))
+                data = json.loads(raw.decode("utf-8"))
+                _store_guided(data)
+                profile.save_profile(data)   # remember it for next time
                 self._send_json({"ok": True})
             except (ValueError, TypeError, AttributeError) as exc:
                 self._send_json({"error": str(exc)})
@@ -434,6 +456,8 @@ class _Handler(BaseHTTPRequestHandler):
             self._send_json(self._scan_json(source))
         elif parsed.path == "/dashboard":
             self._send_html(self._dashboard(source))
+        elif parsed.path == "/profile":
+            self._send_json(profile.load_profile() or {})
         elif parsed.path == "/resolve":
             check = (query.get("check") or [""])[0]
             if check:
