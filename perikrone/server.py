@@ -387,7 +387,8 @@ _SHELL = """<!doctype html>
     fetch('/guided',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({practice_name:el('g-practice').value,
         platform:el('g-platform').value, admin_url:el('g-adminurl').value,
-        ehr_system:(el('g-platform').value==='ehr' ? el('g-ehr').value : ''),
+        ehr_system:(function(){ if(el('g-platform').value!=='ehr'){ return ''; }
+          var v=el('g-ehr').value; return v==='Other (not listed)' ? '' : v; })(),
         security_defaults:el('g-secdef').value, legacy_auth:el('g-legacy').value,
         accounts:accounts})})
       .then(function(r){return r.json();})
