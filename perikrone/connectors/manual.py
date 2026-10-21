@@ -39,6 +39,7 @@ class ManualConnector(Connector):
         _say("  " + "-" * 52)
 
         practice = _ask("Practice name", "My Practice")
+        platform, admin_url = _ask_platform()
         _say("")
         _say("  A couple of system-wide settings (answer y / n / u for unknown):")
         sec_def = _ask_ynu("  Are baseline security protections / 'security defaults' ON?")
@@ -65,7 +66,8 @@ class ManualConnector(Connector):
                 "last_sign_in": _ask_usage("    When was it last used?"),
             })
 
-        snapshot = build_snapshot(practice, sec_def, legacy, accounts, source=self.name)
+        snapshot = build_snapshot(practice, sec_def, legacy, accounts,
+                                  source=self.name, platform=platform, admin_url=admin_url)
         self._save(snapshot)
         return snapshot
 
@@ -83,7 +85,7 @@ class ManualConnector(Connector):
 # ---- shared snapshot builder (used by the CLI above and the in-app web form) --
 
 def build_snapshot(practice_name, security_defaults, legacy_auth, accounts,
-                   source="manual") -> dict:
+                   source="manual", platform="microsoft", admin_url=None) -> dict:
     """Turn guided answers into a normalized snapshot the engine understands.
 
     `security_defaults` / `legacy_auth` are True / False / None (None = unknown).
@@ -107,6 +109,8 @@ def build_snapshot(practice_name, security_defaults, legacy_auth, accounts,
     snapshot = {
         "practice_name": (practice_name or "").strip() or "My Practice",
         "source": source,
+        "platform": platform or "microsoft",
+        "admin_url": (admin_url or "").strip() or None,
         "collected_at": _now_iso(),
         "security_defaults_enabled": security_defaults,
         "legacy_auth_allowed": legacy_auth,
@@ -172,6 +176,22 @@ def _ask_usage(prompt: str):
                     "u", "unknown", "?"):
             return usage_to_last_sign_in(resp)
         _say("    Please answer r, o, x, or u.")
+
+
+def _ask_platform():
+    """Which admin console the practice uses -> (platform, admin_url)."""
+    _say("")
+    while True:
+        resp = _ask(
+            "  What system does the practice use?"
+            " (1=Microsoft 365, 2=Google Workspace, 3=other)", "1").strip().lower()
+        if resp in ("1", "microsoft", "m365"):
+            return "microsoft", None
+        if resp in ("2", "google"):
+            return "google", None
+        if resp in ("3", "other", "o"):
+            return "other", _ask("    Your admin console URL (https://...)", "") or None
+        _say("    Please answer 1, 2, or 3.")
 
 
 def _now_iso() -> str:

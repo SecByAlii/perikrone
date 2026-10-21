@@ -17,6 +17,9 @@ class AssessmentResult:
     collected_at: str
     user_count: int
     findings: list[Finding] = field(default_factory=list)
+    # Which admin console the practice uses, so fixes link to the right place.
+    platform: str = "microsoft"          # "microsoft" | "google" | "other"
+    admin_url: str | None = None          # used when platform == "other"
 
     def ranked(self) -> list[Finding]:
         """Findings worst-first -- the order they belong in a report."""
@@ -78,5 +81,7 @@ def assess_by_step(snapshot: dict) -> tuple[AssessmentResult, list[tuple[str, li
         collected_at=snapshot.get("collected_at", ""),
         user_count=len(snapshot.get("users", [])),
         findings=findings,
+        platform=snapshot.get("platform") or "microsoft",
+        admin_url=snapshot.get("admin_url"),
     )
     return result, steps

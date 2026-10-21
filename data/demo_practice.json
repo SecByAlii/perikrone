@@ -1,6 +1,7 @@
 {
   "practice_name": "Cypress Eye Associates",
   "source": "demo",
+  "platform": "microsoft",
   "collected_at": "2026-10-09T15:00:00Z",
   "security_defaults_enabled": false,
   "legacy_auth_allowed": true,

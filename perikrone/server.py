@@ -44,7 +44,7 @@ def _apply_resolved(result, steps, source):
     new_result = AssessmentResult(
         practice_name=result.practice_name, source=result.source,
         collected_at=result.collected_at, user_count=result.user_count,
-        findings=findings,
+        findings=findings, platform=result.platform, admin_url=result.admin_url,
     )
     return new_result, new_steps
 
@@ -89,7 +89,9 @@ def _store_guided(data):
         data.get("practice_name", ""),
         _tri(data.get("security_defaults")),
         _tri(data.get("legacy_auth")),
-        accounts, source="guided")
+        accounts, source="guided",
+        platform=data.get("platform") or "microsoft",
+        admin_url=data.get("admin_url"))
 
 
 _MARK = """<svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
@@ -233,6 +235,20 @@ _SHELL = """<!doctype html>
       </div>
       <div class="grow2">
         <div class="gfield">
+          <label>What system does the practice use? (sets the admin-console links)</label>
+          <select id="g-platform" onchange="onPlatform()">
+            <option value="microsoft">Microsoft 365</option>
+            <option value="google">Google Workspace</option>
+            <option value="other">Other / custom</option>
+          </select>
+        </div>
+        <div class="gfield" id="g-adminwrap" style="display:none">
+          <label>Your admin console URL</label>
+          <input id="g-adminurl" type="text" placeholder="https://admin.example.com">
+        </div>
+      </div>
+      <div class="grow2">
+        <div class="gfield">
           <label>Are baseline security protections (security defaults) turned on?</label>
           <select id="g-secdef"><option value="unknown">Not sure</option><option value="yes">Yes</option><option value="no">No</option></select>
         </div>
@@ -281,6 +297,9 @@ _SHELL = """<!doctype html>
     d.querySelector('.arm').onclick=function(){ d.remove(); };
     el('g-accounts').appendChild(d);
   }
+  function onPlatform(){
+    el('g-adminwrap').style.display = (el('g-platform').value === 'other') ? 'block' : 'none';
+  }
   function submitGuided(){
     var rows=[].slice.call(document.querySelectorAll('#g-accounts .acct'));
     var accounts=rows.map(function(r){
@@ -293,6 +312,7 @@ _SHELL = """<!doctype html>
     el('g-err').textContent='';
     fetch('/guided',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({practice_name:el('g-practice').value,
+        platform:el('g-platform').value, admin_url:el('g-adminurl').value,
         security_defaults:el('g-secdef').value, legacy_auth:el('g-legacy').value,
         accounts:accounts})})
       .then(function(r){return r.json();})

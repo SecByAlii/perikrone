@@ -122,6 +122,7 @@ def normalize(bundle: dict) -> dict:
     return {
         "practice_name": bundle.get("organization_name", "Google Workspace"),
         "source": "google",
+        "platform": "google",
         "collected_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "security_defaults_enabled": None,  # no Entra-style toggle in Google
         "legacy_auth_allowed": None,
