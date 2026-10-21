@@ -195,7 +195,7 @@ def render_html(result: AssessmentResult, interactive: bool = False,
 
     trend_html = _trend_card(trend)
     plan_html = _action_plan(ranked)
-    console = _console_for(result.platform, result.admin_url)
+    console = _console_for(result.platform, result.admin_url, result.ehr_system)
     findings_html = ""
     if ranked:
         findings_html = '<h3 class="section">What we found</h3>' + "".join(
@@ -456,13 +456,20 @@ def _safe_https(url):
     return p.geturl() if p.scheme == "https" and p.netloc else None
 
 
-def _console_for(platform: str, admin_url: str | None):
+def _console_for(platform: str, admin_url: str | None, ehr_system: str | None = None):
     """The right admin console (label, url) for the practice's platform."""
     if platform == "google":
         return ("Open the Google Admin console", "https://admin.google.com")
-    if platform == "other":
+    if platform in ("other", "ehr"):
         safe = _safe_https(admin_url)
-        return ("Open your admin console", safe) if safe else None
+        if not safe:
+            return None
+        if platform == "ehr":
+            label = (f"Open your {ehr_system} admin console" if ehr_system
+                     else "Open your practice-management console")
+        else:
+            label = "Open your admin console"
+        return (label, safe)
     return ("Open the Microsoft 365 admin center", "https://admin.microsoft.com")
 
 

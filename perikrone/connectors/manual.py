@@ -39,7 +39,7 @@ class ManualConnector(Connector):
         _say("  " + "-" * 52)
 
         practice = _ask("Practice name", "My Practice")
-        platform, admin_url = _ask_platform()
+        platform, admin_url, ehr_system = _ask_platform()
         _say("")
         _say("  A couple of system-wide settings (answer y / n / u for unknown):")
         sec_def = _ask_ynu("  Are baseline security protections / 'security defaults' ON?")
@@ -67,7 +67,8 @@ class ManualConnector(Connector):
             })
 
         snapshot = build_snapshot(practice, sec_def, legacy, accounts,
-                                  source=self.name, platform=platform, admin_url=admin_url)
+                                  source=self.name, platform=platform,
+                                  admin_url=admin_url, ehr_system=ehr_system)
         self._save(snapshot)
         return snapshot
 
@@ -85,7 +86,8 @@ class ManualConnector(Connector):
 # ---- shared snapshot builder (used by the CLI above and the in-app web form) --
 
 def build_snapshot(practice_name, security_defaults, legacy_auth, accounts,
-                   source="manual", platform="microsoft", admin_url=None) -> dict:
+                   source="manual", platform="microsoft", admin_url=None,
+                   ehr_system=None) -> dict:
     """Turn guided answers into a normalized snapshot the engine understands.
 
     `security_defaults` / `legacy_auth` are True / False / None (None = unknown).
@@ -111,6 +113,7 @@ def build_snapshot(practice_name, security_defaults, legacy_auth, accounts,
         "source": source,
         "platform": platform or "microsoft",
         "admin_url": (admin_url or "").strip() or None,
+        "ehr_system": (ehr_system or "").strip() or None,
         "collected_at": _now_iso(),
         "security_defaults_enabled": security_defaults,
         "legacy_auth_allowed": legacy_auth,
@@ -179,19 +182,25 @@ def _ask_usage(prompt: str):
 
 
 def _ask_platform():
-    """Which admin console the practice uses -> (platform, admin_url)."""
+    """Which admin console the practice uses -> (platform, admin_url, ehr_system)."""
     _say("")
     while True:
         resp = _ask(
-            "  What system does the practice use?"
-            " (1=Microsoft 365, 2=Google Workspace, 3=other)", "1").strip().lower()
+            "  What system does the practice use? (1=Microsoft 365,"
+            " 2=Google Workspace, 3=EHR / practice-management, 4=other)",
+            "1").strip().lower()
         if resp in ("1", "microsoft", "m365"):
-            return "microsoft", None
+            return "microsoft", None, None
         if resp in ("2", "google"):
-            return "google", None
-        if resp in ("3", "other", "o"):
-            return "other", _ask("    Your admin console URL (https://...)", "") or None
-        _say("    Please answer 1, 2, or 3.")
+            return "google", None, None
+        if resp in ("3", "ehr"):
+            system = _ask(
+                "    Which EHR / PM system? (e.g. Nextech, ModMed, eClinicalWorks)", "")
+            url = _ask("    Its admin console URL (https://...)", "")
+            return "ehr", url or None, system or None
+        if resp in ("4", "other", "o"):
+            return "other", _ask("    Your admin console URL (https://...)", "") or None, None
+        _say("    Please answer 1, 2, 3, or 4.")
 
 
 def _now_iso() -> str:

@@ -30,6 +30,22 @@ class TestConsoleLinks(unittest.TestCase):
         self.assertEqual(
             _console_for("other", "https://ok.example")[1], "https://ok.example")
 
+    def test_ehr_console_uses_system_and_https(self):
+        c = _console_for("ehr", "https://nextech.example", "Nextech")
+        self.assertEqual(c[1], "https://nextech.example")
+        self.assertIn("Nextech", c[0])
+        # same https safety rule applies to EHR URLs
+        self.assertIsNone(_console_for("ehr", "http://nextech.example", "Nextech"))
+
+    def test_ehr_platform_propagates(self):
+        snap = build_snapshot("Eye Clinic", None, None,
+                              [{"name": "A", "mfa_enabled": False}], source="guided",
+                              platform="ehr", admin_url="https:// nextech".replace(" ", ""),
+                              ehr_system="Nextech")
+        result = assess(snap)
+        self.assertEqual(result.platform, "ehr")
+        self.assertEqual(result.ehr_system, "Nextech")
+
     def test_platform_propagates(self):
         self.assertEqual(assess(DemoConnector().collect()).platform, "microsoft")
         google = assess(g_normalize(json.loads(_GOOGLE_FIXTURE.read_text())))
