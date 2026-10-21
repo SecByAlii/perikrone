@@ -284,15 +284,18 @@ _SHELL = """<!doctype html>
     el('guided').style.display='block';
     if(el('g-accounts').children.length){ return; }  // keep edits already on screen
     fetch('/profile').then(function(r){return r.json();}).then(function(p){
-      el('g-accounts').innerHTML='';
-      if(p && (p.accounts||[]).length){           // returning practice: pre-fill
+      if(el('g-accounts').children.length){ return; }  // user started editing mid-load
+      p = p || {};
+      if(p.practice_name !== undefined || (p.accounts||[]).length){  // saved profile
         el('g-practice').value = p.practice_name || '';
         el('g-platform').value = p.platform || 'microsoft'; onPlatform();
         el('g-adminurl').value = p.admin_url || '';
         el('g-secdef').value = p.security_defaults || 'unknown';
         el('g-legacy').value = p.legacy_auth || 'unknown';
-        p.accounts.forEach(function(a){ addAccount(a); });
-      } else { addAccount(); addAccount(); }       // first run: two blank rows
+      }
+      var accts = p.accounts || [];
+      if(accts.length){ accts.forEach(function(a){ addAccount(a); }); }
+      else { addAccount(); addAccount(); }           // first run / empty roster
     }).catch(function(){ if(!el('g-accounts').children.length){ addAccount(); addAccount(); } });
   }
   function addAccount(a){

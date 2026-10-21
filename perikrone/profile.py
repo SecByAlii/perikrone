@@ -11,6 +11,8 @@ committed). One profile per install for now.
 from __future__ import annotations
 
 import json
+import os
+import tempfile
 from pathlib import Path
 
 _PATH = Path(__file__).resolve().parent.parent / "data" / "profile.json"
@@ -29,4 +31,16 @@ def load_profile(path=None):
 def save_profile(data: dict, path=None) -> None:
     p = Path(path) if path else _PATH
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    # Write to a temp file in the same directory, then atomically replace, so a
+    # crash mid-write can never leave the practice's roster half-written/corrupt.
+    fd, tmp = tempfile.mkstemp(dir=str(p.parent), suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            json.dump(data, fh, indent=2)
+        os.replace(tmp, p)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
