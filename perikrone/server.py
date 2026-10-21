@@ -91,7 +91,8 @@ def _store_guided(data):
         _tri(data.get("legacy_auth")),
         accounts, source="guided",
         platform=data.get("platform") or "microsoft",
-        admin_url=data.get("admin_url"))
+        admin_url=data.get("admin_url"),
+        ehr_system=data.get("ehr_system"))
 
 
 _MARK = """<svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
@@ -239,11 +240,57 @@ _SHELL = """<!doctype html>
           <select id="g-platform" onchange="onPlatform()">
             <option value="microsoft">Microsoft 365</option>
             <option value="google">Google Workspace</option>
+            <option value="ehr">EHR / Practice management system</option>
             <option value="other">Other / custom</option>
           </select>
         </div>
+        <div class="gfield" id="g-ehrwrap" style="display:none">
+          <label>Which EHR / practice-management system?</label>
+          <select id="g-ehr">
+            <optgroup label="General / multi-specialty">
+              <option>Epic</option><option>Oracle Health (Cerner)</option>
+              <option>athenahealth (athenaOne)</option><option>eClinicalWorks</option>
+              <option>NextGen Healthcare</option><option>Veradigm (Allscripts)</option>
+              <option>Greenway Health</option><option>Tebra (Kareo)</option>
+              <option>Practice Fusion</option><option>DrChrono</option>
+              <option>AdvancedMD</option><option>CareCloud</option>
+              <option>Elation Health</option><option>Amazing Charts</option>
+              <option>CharmHealth</option><option>RXNT</option>
+              <option>Azalea Health</option><option>Praxis EMR</option>
+              <option>MEDITECH</option><option>Harris CareTracker</option>
+              <option>Modernizing Medicine (ModMed)</option><option>Nextech</option>
+            </optgroup>
+            <optgroup label="Eye care (ophthalmology / optometry)">
+              <option>Compulink Eyecare Advantage</option><option>EyeMD EMR</option>
+              <option>RevolutionEHR</option><option>Medflow</option>
+              <option>Eyefinity / OfficeMate</option><option>Crystal PM</option>
+              <option>MaximEyes</option><option>My Vision Express</option>
+              <option>Uprise</option>
+            </optgroup>
+            <optgroup label="Dermatology / aesthetics">
+              <option>EZDERM</option><option>Symplast</option>
+              <option>Aesthetic Record</option><option>PatientNow</option>
+            </optgroup>
+            <optgroup label="Dental">
+              <option>Dentrix</option><option>Eaglesoft</option>
+              <option>Open Dental</option><option>Curve Dental</option>
+              <option>Denticon</option><option>Carestream Dental</option>
+            </optgroup>
+            <optgroup label="Behavioral health">
+              <option>SimplePractice</option><option>TherapyNotes</option>
+              <option>TheraNest</option><option>Valant</option><option>Kipu</option>
+            </optgroup>
+            <optgroup label="Pediatrics / physical therapy">
+              <option>Office Practicum</option><option>PCC</option>
+              <option>WebPT</option><option>Prompt</option><option>Raintree</option>
+            </optgroup>
+            <optgroup label="Other">
+              <option>Other (not listed)</option>
+            </optgroup>
+          </select>
+        </div>
         <div class="gfield" id="g-adminwrap" style="display:none">
-          <label>Your admin console URL</label>
+          <label>Admin console URL (optional)</label>
           <input id="g-adminurl" type="text" placeholder="https://admin.example.com">
         </div>
       </div>
@@ -288,7 +335,9 @@ _SHELL = """<!doctype html>
       p = p || {};
       if(p.practice_name !== undefined || (p.accounts||[]).length){  // saved profile
         el('g-practice').value = p.practice_name || '';
-        el('g-platform').value = p.platform || 'microsoft'; onPlatform();
+        el('g-platform').value = p.platform || 'microsoft';
+        if(p.ehr_system){ el('g-ehr').value = p.ehr_system; }
+        onPlatform();
         el('g-adminurl').value = p.admin_url || '';
         el('g-secdef').value = p.security_defaults || 'unknown';
         el('g-legacy').value = p.legacy_auth || 'unknown';
@@ -321,7 +370,9 @@ _SHELL = """<!doctype html>
     }
   }
   function onPlatform(){
-    el('g-adminwrap').style.display = (el('g-platform').value === 'other') ? 'block' : 'none';
+    var p = el('g-platform').value;
+    el('g-ehrwrap').style.display = (p === 'ehr') ? 'block' : 'none';
+    el('g-adminwrap').style.display = (p === 'ehr' || p === 'other') ? 'block' : 'none';
   }
   function submitGuided(){
     var rows=[].slice.call(document.querySelectorAll('#g-accounts .acct'));
@@ -336,6 +387,8 @@ _SHELL = """<!doctype html>
     fetch('/guided',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({practice_name:el('g-practice').value,
         platform:el('g-platform').value, admin_url:el('g-adminurl').value,
+        ehr_system:(function(){ if(el('g-platform').value!=='ehr'){ return ''; }
+          var v=el('g-ehr').value; return v==='Other (not listed)' ? '' : v; })(),
         security_defaults:el('g-secdef').value, legacy_auth:el('g-legacy').value,
         accounts:accounts})})
       .then(function(r){return r.json();})
